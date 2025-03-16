@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Landscape Clock</title>
+    <title>美しい風景写真と時計表示 | 高画質スクリーンセーバー</title>
+    <meta name="description" content="高解像度の風景写真と優雅なデジタル時計表示を備えたスクリーンセーバー。山、海、森林、都市など多彩な風景から選択でき、PWA対応でオフラインでも使用可能。">
     
     <!-- PWA関連メタタグ -->
     <link rel="manifest" href="/manifest.json">
@@ -18,6 +19,8 @@
     <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png">
     <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.png">
+
+    <meta name="keywords" content="clock, landscape, デジタル時計, スクリーンセーバー, 高画質, 山の風景, 海の風景, 森林, 都市風景, PWA, オフライン対応">
     
     <style>
         * {
@@ -909,25 +912,25 @@
         
         // 背景要素の初期化
         function initializeBackgrounds() {
-            for (let i = 0; i < photos.length; i++) {
-                const bg = document.createElement('div');
-                bg.className = 'background';
-                bg.style.backgroundImage = `url(${photos[i].url})`;
-                
-                // 画像の事前読み込み
-                const preloadImg = new Image();
-                preloadImg.src = photos[i].url;
-                
-                if (i === 0) {
-                    bg.classList.add('active');
-                    updatePhotoInfo(0);
-                    updateCurrentKeyword(0);
-                }
-                
-                document.body.appendChild(bg);
-                backgrounds.push(bg);
-            }
-        }
+  for (let i = 0; i < photos.length; i++) {
+    const bg = document.createElement('div');
+    bg.className = 'background';
+    
+    // 最初の画像以外は遅延読み込み
+    if (i === 0) {
+      bg.style.backgroundImage = `url(${photos[i].url})`;
+      bg.classList.add('active');
+      updatePhotoInfo(0);
+      updateCurrentKeyword(0);
+    } else {
+      // データ属性に URL を保存し、表示直前に読み込む
+      bg.dataset.backgroundImage = photos[i].url;
+    }
+    
+    document.body.appendChild(bg);
+    backgrounds.push(bg);
+  }
+}
         
         // 背景をクリア
         function clearBackgrounds() {
@@ -961,16 +964,29 @@
             document.getElementById('date').textContent = dateString;
         }
 
-        // 背景画像の切り替え
-        function changeBackground() {
-            backgrounds[currentBgIndex].classList.remove('active');
-            currentBgIndex = (currentBgIndex + 1) % backgrounds.length;
-            backgrounds[currentBgIndex].classList.add('active');
-            // 写真情報を更新
-            updatePhotoInfo(currentBgIndex);
-            // キーワードを更新
-            updateCurrentKeyword(currentBgIndex);
-        }
+        // 背景画像の切り替え（レイジーローディング対応）
+function changeBackground() {
+  backgrounds[currentBgIndex].classList.remove('active');
+  currentBgIndex = (currentBgIndex + 1) % backgrounds.length;
+  
+  // 次の背景がまだ読み込まれていない場合は読み込む
+  const nextBg = backgrounds[currentBgIndex];
+  if (nextBg.dataset.backgroundImage) {
+    nextBg.style.backgroundImage = `url(${nextBg.dataset.backgroundImage})`;
+    nextBg.dataset.backgroundImage = '';
+    
+    // その次の背景も事前に読み込む
+    const preloadIndex = (currentBgIndex + 1) % backgrounds.length;
+    if (backgrounds[preloadIndex].dataset.backgroundImage) {
+      const preloadImg = new Image();
+      preloadImg.src = backgrounds[preloadIndex].dataset.backgroundImage;
+    }
+  }
+  
+  nextBg.classList.add('active');
+  updatePhotoInfo(currentBgIndex);
+  updateCurrentKeyword(currentBgIndex);
+}
 
         // 写真情報の更新
         function updatePhotoInfo(index) {
