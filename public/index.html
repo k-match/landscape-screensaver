@@ -552,7 +552,7 @@
                 // ランダムにキーワードを選択
                 const randomKeyword = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)];
                 debugLog('🔍 ランダムキーワード選択:', randomKeyword);
-                const query = `landscape,${randomKeyword}`;
+                const query = `${randomKeyword}`;
                 
                 // 使用したキーワードを保存（後で表示するため）
                 window.lastUsedKeyword = randomKeyword;

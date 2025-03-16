@@ -37,16 +37,43 @@ self.addEventListener('activate', event => {
   );
 });
 
+// URLがキャッシュ可能かチェックする関数
+function isCacheableRequest(url) {
+  // chrome-extension:// URLはキャッシュしない
+  if (url.startsWith('chrome-extension:')) {
+    return false;
+  }
+  
+  // 他にもキャッシュしたくないスキームがあれば追加
+  const nonCacheableSchemes = ['data:', 'blob:', 'filesystem:'];
+  for (const scheme of nonCacheableSchemes) {
+    if (url.startsWith(scheme)) {
+      return false;
+    }
+  }
+  
+  return true;
+}
+
 // ネットワークリクエストをインターセプト
 self.addEventListener('fetch', event => {
+  // リクエストURLの取得
+  const requestUrl = event.request.url;
+  
   // API呼び出しはネットワークを優先し、キャッシュはフォールバックとして使用
-  if (event.request.url.includes('/api/')) {
+  if (requestUrl.includes('/api/')) {
     event.respondWith(
       fetch(event.request)
         .catch(() => {
           return caches.match('/index.html');
         })
     );
+    return;
+  }
+  
+  // キャッシュできないリクエストはネットワークから直接取得
+  if (!isCacheableRequest(requestUrl)) {
+    event.respondWith(fetch(event.request));
     return;
   }
   
@@ -65,12 +92,15 @@ self.addEventListener('fetch', event => {
               return response;
             }
             
-            // レスポンスのクローンを作成してキャッシュに保存
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
+            // キャッシュ可能なリクエストの場合のみキャッシュに保存
+            if (isCacheableRequest(requestUrl)) {
+              // レスポンスのクローンを作成してキャッシュに保存
+              const responseToCache = response.clone();
+              caches.open(CACHE_NAME)
+                .then(cache => {
+                  cache.put(event.request, responseToCache);
+                });
+            }
             
             return response;
           })
