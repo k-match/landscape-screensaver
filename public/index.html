@@ -246,7 +246,8 @@
         // 設定
         const KEYWORDS = ['mountains', 'ocean', 'forest', 'sunset', 'winter', 'summer', 'city', 'desert', 'beach', 'night'];
         const CACHE_KEY = 'unsplash_photos_cache';
-        const CACHE_EXPIRY = 1 * 60 * 60 * 1000; // 1時間（ミリ秒）
+        const CACHE_EXPIRY = 2 * 60 * 60 * 1000; // 1時間（ミリ秒）
+        const PHOTOS_COUNT = 16; // 一度に取得する画像の数
 
         // Pages Functions API エンドポイント（相対パス）
         const API_ENDPOINT = '/api/unsplash';
@@ -455,7 +456,7 @@
                 const timestamp = window.cacheTimestamp || new Date().getTime();
                 
                 // APIリクエスト（サイズ情報とキャッシュバスティングパラメータを追加）
-                const response = await fetch(`${API_ENDPOINT}?query=${query}&count=5&width=${screenWidth}&height=${screenHeight}&_=${timestamp}`);
+                const response = await fetch(`${API_ENDPOINT}?query=${query}&count=${PHOTOS_COUNT}&width=${screenWidth}&height=${screenHeight}&_=${timestamp}`);
                 
                 if (!response.ok) {
                     throw new Error(`API responded with ${response.status}: ${response.statusText}`);
