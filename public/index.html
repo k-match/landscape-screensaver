@@ -141,6 +141,41 @@
             text-decoration: underline;
         }
 
+        /* ここから新しいコントロールパネルのスタイル */
+        .controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .controls:hover {
+            opacity: 1;
+        }
+
+        .controls-button {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin: 5px 0;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .controls-button:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        /* ここまでコントロールパネルのスタイル */
+
         @media (max-width: 768px) {
             .time {
                 font-size: 5rem;
@@ -171,6 +206,11 @@
     </div>
 
     <div class="photo-info" id="photo-info"></div>
+    
+    <!-- 新しいコントロールパネル -->
+    <div class="controls" id="controls">
+        <button class="controls-button" id="refresh-button">新しい画像を取得</button>
+    </div>
 
     <script>
         // 設定
@@ -255,7 +295,38 @@
                         });
                 }
             });
+            
+            // 新しい画像を取得ボタンのイベントリスナー
+            document.getElementById('refresh-button').addEventListener('click', () => {
+                refreshPhotos();
+            });
         });
+        
+        // 新しい画像を取得する関数
+        function refreshPhotos() {
+            // キャッシュをクリア
+            localStorage.removeItem(CACHE_KEY);
+            
+            // ブラウザキャッシュを避けるためにタイムスタンプを使用
+            window.cacheTimestamp = new Date().getTime();
+            
+            // 写真を再読み込み
+            clearBackgrounds();
+            showLoadingIndicator();
+            fetchUnsplashPhotos()
+                .then(data => {
+                    photos = data;
+                    cachePhotos(photos);
+                    initializeBackgrounds();
+                    hideLoadingIndicator();
+                })
+                .catch(error => {
+                    console.error('Failed to fetch photos:', error);
+                    useFallbackImages();
+                    initializeBackgrounds();
+                    hideLoadingIndicator();
+                });
+        }
 
         // ローカルストレージからキャッシュをチェック
         function checkPhotoCache() {
@@ -303,8 +374,11 @@
                 const screenWidth = window.innerWidth * window.devicePixelRatio;
                 const screenHeight = window.innerHeight * window.devicePixelRatio;
                 
-                // APIリクエスト（サイズ情報を追加）
-                const response = await fetch(`${API_ENDPOINT}?query=${query}&count=5&width=${screenWidth}&height=${screenHeight}`);
+                // ブラウザキャッシュを避けるためのタイムスタンプを追加
+                const timestamp = window.cacheTimestamp || new Date().getTime();
+                
+                // APIリクエスト（サイズ情報とキャッシュバスティングパラメータを追加）
+                const response = await fetch(`${API_ENDPOINT}?query=${query}&count=5&width=${screenWidth}&height=${screenHeight}&_=${timestamp}`);
                 
                 if (!response.ok) {
                     throw new Error(`API responded with ${response.status}: ${response.statusText}`);
@@ -458,10 +532,13 @@
         }
         
         // クリックでフルスクリーン表示
-        document.addEventListener('click', () => {
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
-                keepAwake();
+        document.addEventListener('click', (e) => {
+            // コントロールパネル内のクリックはフルスクリーンを起動しない
+            if (!e.target.closest('#controls')) {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                    keepAwake();
+                }
             }
         });
     </script>

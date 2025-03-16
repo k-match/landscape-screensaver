@@ -1,5 +1,5 @@
 // functions/api/unsplash.js
-// 画面サイズに基づいて最適な解像度のイメージを提供
+// キャッシュバスティング対応版
 
 export async function onRequest(context) {
     // リクエストの取得
@@ -15,12 +15,16 @@ export async function onRequest(context) {
     // 環境変数からAPIキーを取得
     const apiKey = context.env.UNSPLASH_API_KEY;
     
-    // CORSヘッダー
+    // CORSヘッダー（キャッシュ制御を追加）
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET,OPTIONS',
       'Content-Type': 'application/json',
-      'Cache-Control': 'max-age=600' // 10分間のブラウザキャッシュを設定
+      // キャッシュバスティングのためにキャッシュ無効化 
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'Surrogate-Control': 'no-store'
     };
     
     // OPTIONSリクエスト（プリフライト）への対応
@@ -31,12 +35,14 @@ export async function onRequest(context) {
     }
     
     try {
-      // Unsplash APIの直接呼び出し
-      const apiUrl = `https://api.unsplash.com/photos/random?query=${query}&count=${count}&orientation=landscape`;
+      // Unsplash APIの直接呼び出し（キャッシュバスティング対応）
+      const timestamp = new Date().getTime();
+      const apiUrl = `https://api.unsplash.com/photos/random?query=${query}&count=${count}&orientation=landscape&_=${timestamp}`;
       const response = await fetch(apiUrl, {
         headers: {
           'Authorization': `Client-ID ${apiKey}`,
-          'Accept-Version': 'v1'
+          'Accept-Version': 'v1',
+          'Cache-Control': 'no-cache'
         }
       });
       
@@ -57,22 +63,25 @@ export async function onRequest(context) {
           thumb: photo.urls.thumb
         };
         
+        // キャッシュバスティングのためのタイムスタンプパラメータ
+        const cacheBuster = `&_=${new Date().getTime()}`;
+        
         // 小さな画面にはsmallを使用
         if (screenWidth <= 640) {
-          return photo.urls.small;
+          return `${photo.urls.small}${photo.urls.small.includes('?') ? '&' : '?'}_=${timestamp}`;
         }
         // 中程度の画面にはregularを使用
         else if (screenWidth <= 1920) {
-          return photo.urls.regular;
+          return `${photo.urls.regular}${photo.urls.regular.includes('?') ? '&' : '?'}_=${timestamp}`;
         }
         // 大きな画面にはfullを使用
         else if (screenWidth <= 2560) {
-          return photo.urls.full;
+          return `${photo.urls.full}${photo.urls.full.includes('?') ? '&' : '?'}_=${timestamp}`;
         }
         // 超高解像度の画面にはrawをリサイズして使用
         else {
           // rawには幅と高さを指定できる
-          return `${photo.urls.raw}&w=${screenWidth}&fit=max`;
+          return `${photo.urls.raw}&w=${screenWidth}&fit=max&_=${timestamp}`;
         }
       };
       
