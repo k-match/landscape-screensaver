@@ -210,6 +210,47 @@
             font-weight: 300;
             letter-spacing: 0.5px;
             text-transform: capitalize;
+            cursor: pointer;
+        }
+
+        .keyword-tag:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* キーワードセレクターのスタイル */
+        .keyword-selector {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            z-index: 50;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            padding: 10px 15px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .keyword-dropdown {
+            background-color: rgba(0, 0, 0, 0.3);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 0.9rem;
+            width: 200px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .keyword-dropdown:focus {
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .keyword-dropdown option {
+            background-color: rgba(30, 30, 30, 0.9);
         }
 
         /* オフラインモード通知 */
@@ -259,6 +300,13 @@
         <span class="keyword-tag" id="current-keyword-tag">landscape</span>
     </div>
     
+    <!-- キーワード選択ドロップダウン -->
+    <div class="keyword-selector" id="keyword-selector">
+        <select id="keyword-dropdown" class="keyword-dropdown">
+            <!-- オプションはJavaScriptで動的に生成されます -->
+        </select>
+    </div>
+    
     <!-- Backgrounds will be inserted here by JavaScript -->
     
     <div class="clock-container">
@@ -284,14 +332,29 @@
         let lastScreenWidth = window.innerWidth;
         let lastScreenHeight = window.innerHeight;
         let isOffline = !navigator.onLine;
-        // フェッチの状態を追跡するフラグ
         let isUnsplashFetchInProgress = false;
+        let selectedKeyword = 'landscape';
 
         // 設定
         const KEYWORDS = ['landscape', 'mountains', 'ocean', 'forest', 'sunset', 'winter', 'summer', 'city', 'desert', 'beach', 'night'];
         const CACHE_KEY = 'unsplash_photos_cache';
         const CACHE_EXPIRY = 2 * 60 * 60 * 1000; // 2時間（ミリ秒）
         const PHOTOS_COUNT = 16; // 一度に取得する画像の数
+
+        // 日本語キーワードマッピング
+        const KEYWORDS_JP = {
+            'landscape': '景色',
+            'mountains': '山',
+            'ocean': '海',
+            'forest': '森',
+            'sunset': '夕日',
+            'winter': '冬',
+            'summer': '夏',
+            'city': '都市',
+            'desert': '砂漠',
+            'beach': 'ビーチ',
+            'night': '夜景'
+        };
 
         // Pages Functions API エンドポイント（相対パス）
         const API_ENDPOINT = '/api/unsplash';
@@ -302,6 +365,9 @@
             
             // オフラインステータスの更新
             updateOfflineStatus();
+            
+            // キーワードドロップダウンの初期化
+            initializeKeywordDropdown();
             
             // キャッシュをチェック
             const cachedData = checkPhotoCache();
@@ -389,7 +455,59 @@
                     keepAwake();
                 }
             });
+            
+            // キーワードタグのクリックでセレクタを表示
+            document.getElementById('current-keyword-tag').addEventListener('click', (e) => {
+                const keywordSelector = document.getElementById('keyword-selector');
+                keywordSelector.style.display = keywordSelector.style.display === 'none' || keywordSelector.style.display === '' ? 'block' : 'none';
+                e.stopPropagation();
+            });
+
+            // キーワードドロップダウンの変更イベント
+            document.getElementById('keyword-dropdown').addEventListener('change', (e) => {
+                selectedKeyword = e.target.value;
+                
+                // 現在のキーワードタグを更新
+                const keywordTag = document.getElementById('current-keyword-tag');
+                keywordTag.textContent = selectedKeyword;
+                
+                // キーワードセレクタを非表示
+                document.getElementById('keyword-selector').style.display = 'none';
+                
+                // 新しいキーワードで画像を取得
+                refreshPhotosWithKeyword(selectedKeyword);
+            });
+
+            // ドキュメントクリックでセレクタを非表示
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#keyword-selector') && !e.target.closest('#current-keyword-tag')) {
+                    document.getElementById('keyword-selector').style.display = 'none';
+                }
+            });
         });
+        
+        // キーワードドロップダウンの初期化
+        function initializeKeywordDropdown() {
+            const dropdown = document.getElementById('keyword-dropdown');
+            
+            // 既存のオプションをクリア
+            dropdown.innerHTML = '';
+            
+            // KEYWORDS配列からオプションを生成
+            KEYWORDS.forEach(keyword => {
+                const option = document.createElement('option');
+                option.value = keyword;
+                
+                // 日本語名があれば使用、なければそのままキーワードを表示
+                const jpName = KEYWORDS_JP[keyword] || keyword;
+                option.textContent = `${jpName} (${keyword})`;
+                
+                dropdown.appendChild(option);
+            });
+            
+            // デフォルトで現在選択されているキーワードを選択
+            dropdown.value = selectedKeyword;
+        }
         
         // 現在の画像のキーワードを更新する関数
         function updateCurrentKeyword(index) {
@@ -429,10 +547,45 @@
             // ブラウザキャッシュを避けるためにタイムスタンプを使用
             window.cacheTimestamp = new Date().getTime();
             
+            // 現在選択されているキーワードを取得
+            const currentKeyword = selectedKeyword || KEYWORDS[0];
+            
             // 写真を再読み込み
             clearBackgrounds();
             showLoadingIndicator();
-            fetchUnsplashPhotos()
+            fetchUnsplashPhotosWithKeyword(currentKeyword)
+                .then(data => {
+                    photos = data;
+                    cachePhotos(photos);
+                    initializeBackgrounds();
+                    hideLoadingIndicator();
+                })
+                .catch(error => {
+                    console.error('Failed to fetch photos:', error);
+                    useFallbackImages();
+                    initializeBackgrounds();
+                    hideLoadingIndicator();
+                });
+        }
+        
+        // 指定したキーワードで画像を取得する関数
+        function refreshPhotosWithKeyword(keyword) {
+            // オフラインモードの場合は処理を中止
+            if (isOffline) {
+                alert('オフライン状態です。インターネット接続を確認してください。');
+                return;
+            }
+            
+            // キャッシュをクリア
+            localStorage.removeItem(CACHE_KEY);
+            
+            // ブラウザキャッシュを避けるためにタイムスタンプを使用
+            window.cacheTimestamp = new Date().getTime();
+            
+            // 写真を再読み込み
+            clearBackgrounds();
+            showLoadingIndicator();
+            fetchUnsplashPhotosWithKeyword(keyword)
                 .then(data => {
                     photos = data;
                     cachePhotos(photos);
@@ -509,12 +662,12 @@
                     throw new Error('Currently offline');
                 }
                 
-                // ランダムにキーワードを選択
-                const randomKeyword = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)];
-                const query = `${randomKeyword}`;
+                // デフォルトでは最初のキーワード（landscape）を使用
+                const keyword = selectedKeyword || KEYWORDS[0];
+                const query = keyword;
                 
                 // 使用したキーワードを保存（後で表示するため）
-                window.lastUsedKeyword = randomKeyword;
+                window.lastUsedKeyword = keyword;
                 
                 // 画面サイズを取得
                 const screenWidth = window.innerWidth * window.devicePixelRatio;
@@ -533,7 +686,67 @@
                 const data = await response.json();
                 
                 // 各写真に使用したキーワードを関連付ける
-                photoKeywords = Array(data.length).fill(window.lastUsedKeyword || 'landscape');
+                photoKeywords = Array(data.length).fill(keyword);
+                
+                isUnsplashFetchInProgress = false;
+                return data;
+            } catch (error) {
+                console.error('Failed to fetch from Unsplash API:', error);
+                isUnsplashFetchInProgress = false;
+                throw error;
+            }
+        }
+        
+        // 特定のキーワードで Unsplash から写真を取得する関数
+        async function fetchUnsplashPhotosWithKeyword(keyword) {
+            try {
+                // 既にフェッチが進行中の場合は、新しいフェッチをスキップ
+                if (isUnsplashFetchInProgress) {
+                    return new Promise(resolve => {
+                        // 既存のフェッチが完了するまで待機
+                        const checkPhotos = () => {
+                            if (photos.length > 0) {
+                                resolve(photos);
+                            } else {
+                                setTimeout(checkPhotos, 100);
+                            }
+                        };
+                        checkPhotos();
+                    });
+                }
+                
+                isUnsplashFetchInProgress = true;
+                
+                // オフラインモードの場合はエラーをスロー
+                if (isOffline) {
+                    isUnsplashFetchInProgress = false;
+                    throw new Error('Currently offline');
+                }
+                
+                // 選択されたキーワードを使用
+                const query = keyword;
+                
+                // 使用したキーワードを保存（後で表示するため）
+                window.lastUsedKeyword = keyword;
+                
+                // 画面サイズを取得
+                const screenWidth = window.innerWidth * window.devicePixelRatio;
+                const screenHeight = window.innerHeight * window.devicePixelRatio;
+                
+                // ブラウザキャッシュを避けるためのタイムスタンプを追加
+                const timestamp = window.cacheTimestamp || new Date().getTime();
+                
+                // APIリクエスト（サイズ情報とキャッシュバスティングパラメータを追加）
+                const response = await fetch(`${API_ENDPOINT}?query=${query}&count=${PHOTOS_COUNT}&width=${screenWidth}&height=${screenHeight}&_=${timestamp}`);
+                
+                if (!response.ok) {
+                    throw new Error(`API responded with ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // 各写真に使用したキーワードを関連付ける
+                photoKeywords = Array(data.length).fill(keyword);
                 
                 isUnsplashFetchInProgress = false;
                 return data;
@@ -668,6 +881,23 @@
             }, 500);
         }
         
+        // KEYWORDS配列を動的に更新する場合の関数
+        function updateKeywords(newKeywords) {
+            // KEYWORDSを更新
+            KEYWORDS.length = 0; // 配列をクリア
+            newKeywords.forEach(keyword => KEYWORDS.push(keyword));
+            
+            // ドロップダウンを再初期化
+            initializeKeywordDropdown();
+            
+            // 現在選択されているキーワードがまだ有効かチェック
+            if (!KEYWORDS.includes(selectedKeyword)) {
+                // 選択されたキーワードが有効でなくなった場合は最初のキーワードを選択
+                selectedKeyword = KEYWORDS[0];
+                document.getElementById('current-keyword-tag').textContent = selectedKeyword;
+            }
+        }
+        
         // サービスワーカーの登録
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -700,7 +930,7 @@
         // クリックでフルスクリーン表示
         document.addEventListener('click', (e) => {
             // コントロールパネル内のクリックはフルスクリーンを起動しない
-            if (!e.target.closest('#controls') && !e.target.closest('#current-keyword')) {
+            if (!e.target.closest('#controls') && !e.target.closest('#current-keyword') && !e.target.closest('#keyword-selector')) {
                 if (document.documentElement.requestFullscreen) {
                     document.documentElement.requestFullscreen();
                     keepAwake();
