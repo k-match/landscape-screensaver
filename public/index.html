@@ -85,13 +85,23 @@
         
         /* 画像読み込み前の初期状態 */
         .background.loading {
-            background-color: #000;
-            opacity: 1;
+            /* background-color: #000;
+            opacity: 1; */
+            animation: backgroundTransition 3s ease-in-out infinite;
         }
+
+        /* ローディング中の背景トランジションアニメーション */
+@keyframes backgroundTransition {
+    0% { background-color: #000; }
+    40% { background-color: #1a365d; }
+    80% { background-color: #000; }
+    100% { background-color: #000; }
+}
         
         /* 画像が読み込まれ、表示準備ができた状態 */
         .background.ready {
-            opacity: 0;
+            /* opacity: 0; */
+            animation: fadeInImage 1.5s ease-in-out forwards;
         }
         
         /* 画像フェードインアニメーション */
