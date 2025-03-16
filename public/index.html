@@ -288,7 +288,7 @@
         let isUnsplashFetchInProgress = false;
 
         // 設定
-        const KEYWORDS = ['mountains', 'ocean', 'forest', 'sunset', 'winter', 'summer', 'city', 'desert', 'beach', 'night'];
+        const KEYWORDS = ['landscape', 'mountains', 'ocean', 'forest', 'sunset', 'winter', 'summer', 'city', 'desert', 'beach', 'night'];
         const CACHE_KEY = 'unsplash_photos_cache';
         const CACHE_EXPIRY = 2 * 60 * 60 * 1000; // 2時間（ミリ秒）
         const PHOTOS_COUNT = 16; // 一度に取得する画像の数
@@ -511,7 +511,7 @@
                 
                 // ランダムにキーワードを選択
                 const randomKeyword = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)];
-                const query = `landscape,${randomKeyword}`;
+                const query = `${randomKeyword}`;
                 
                 // 使用したキーワードを保存（後で表示するため）
                 window.lastUsedKeyword = randomKeyword;
