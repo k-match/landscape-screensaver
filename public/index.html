@@ -186,6 +186,8 @@
         let backgrounds = [];
         let photos = [];
         let isLoading = true;
+        let lastScreenWidth = window.innerWidth;
+        let lastScreenHeight = window.innerHeight;
 
         // アプリケーション開始
         document.addEventListener('DOMContentLoaded', () => {
@@ -223,6 +225,36 @@
             updateClock();
             setInterval(updateClock, 1000);
             setInterval(changeBackground, 20000); // 20秒ごとに背景を変更
+            
+            // 画面サイズの変更を監視
+            window.addEventListener('resize', () => {
+                // 画面サイズが大幅に変わった場合のみ再読み込み
+                if (Math.abs(window.innerWidth - lastScreenWidth) > 200 || 
+                    Math.abs(window.innerHeight - lastScreenHeight) > 200) {
+                    lastScreenWidth = window.innerWidth;
+                    lastScreenHeight = window.innerHeight;
+                    
+                    // キャッシュをクリア
+                    localStorage.removeItem(CACHE_KEY);
+                    
+                    // 写真を再読み込み
+                    clearBackgrounds();
+                    showLoadingIndicator();
+                    fetchUnsplashPhotos()
+                        .then(data => {
+                            photos = data;
+                            cachePhotos(photos);
+                            initializeBackgrounds();
+                            hideLoadingIndicator();
+                        })
+                        .catch(error => {
+                            console.error('Failed to fetch photos:', error);
+                            useFallbackImages();
+                            initializeBackgrounds();
+                            hideLoadingIndicator();
+                        });
+                }
+            });
         });
 
         // ローカルストレージからキャッシュをチェック
@@ -267,8 +299,12 @@
                 const randomKeyword = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)];
                 const query = `landscape,${randomKeyword}`;
                 
-                // APIリクエスト
-                const response = await fetch(`${API_ENDPOINT}?query=${query}&count=5`);
+                // 画面サイズを取得
+                const screenWidth = window.innerWidth * window.devicePixelRatio;
+                const screenHeight = window.innerHeight * window.devicePixelRatio;
+                
+                // APIリクエスト（サイズ情報を追加）
+                const response = await fetch(`${API_ENDPOINT}?query=${query}&count=5&width=${screenWidth}&height=${screenHeight}`);
                 
                 if (!response.ok) {
                     throw new Error(`API responded with ${response.status}: ${response.statusText}`);
@@ -316,6 +352,15 @@
                 document.body.appendChild(bg);
                 backgrounds.push(bg);
             }
+        }
+        
+        // 背景をクリア
+        function clearBackgrounds() {
+            backgrounds.forEach(bg => {
+                document.body.removeChild(bg);
+            });
+            backgrounds = [];
+            currentBgIndex = 0;
         }
 
         // 時計の更新

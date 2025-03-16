@@ -1,5 +1,5 @@
 // functions/api/unsplash.js
-// KVストレージのキャッシュ機能を削除したシンプル版
+// 画面サイズに基づいて最適な解像度のイメージを提供
 
 export async function onRequest(context) {
     // リクエストの取得
@@ -9,6 +9,8 @@ export async function onRequest(context) {
     // クエリパラメータの取得
     const query = url.searchParams.get('query') || 'landscape';
     const count = parseInt(url.searchParams.get('count') || '5', 10);
+    const width = parseInt(url.searchParams.get('width') || '1920', 10);
+    const height = parseInt(url.searchParams.get('height') || '1080', 10);
     
     // 環境変数からAPIキーを取得
     const apiKey = context.env.UNSPLASH_API_KEY;
@@ -29,7 +31,7 @@ export async function onRequest(context) {
     }
     
     try {
-      // Unsplash APIの直接呼び出し（キャッシュなし）
+      // Unsplash APIの直接呼び出し
       const apiUrl = `https://api.unsplash.com/photos/random?query=${query}&count=${count}&orientation=landscape`;
       const response = await fetch(apiUrl, {
         headers: {
@@ -44,10 +46,40 @@ export async function onRequest(context) {
       
       const data = await response.json();
       
+      // 画面サイズに基づいて最適な解像度を選択
+      const getOptimalImageUrl = (photo, screenWidth, screenHeight) => {
+        // 利用可能な解像度オプション
+        const urls = {
+          raw: photo.urls.raw,
+          full: photo.urls.full,
+          regular: photo.urls.regular,
+          small: photo.urls.small,
+          thumb: photo.urls.thumb
+        };
+        
+        // 小さな画面にはsmallを使用
+        if (screenWidth <= 640) {
+          return photo.urls.small;
+        }
+        // 中程度の画面にはregularを使用
+        else if (screenWidth <= 1920) {
+          return photo.urls.regular;
+        }
+        // 大きな画面にはfullを使用
+        else if (screenWidth <= 2560) {
+          return photo.urls.full;
+        }
+        // 超高解像度の画面にはrawをリサイズして使用
+        else {
+          // rawには幅と高さを指定できる
+          return `${photo.urls.raw}&w=${screenWidth}&fit=max`;
+        }
+      };
+      
       // 必要なデータだけを抽出
       const processedData = data.map(photo => ({
         id: photo.id,
-        url: photo.urls.regular,
+        url: getOptimalImageUrl(photo, width, height),
         download_url: photo.links.download,
         width: photo.width,
         height: photo.height,
@@ -61,7 +93,7 @@ export async function onRequest(context) {
         }
       }));
       
-      // 結果を返す（KVキャッシュなし）
+      // 結果を返す
       return new Response(JSON.stringify(processedData), {
         headers: corsHeaders
       });
