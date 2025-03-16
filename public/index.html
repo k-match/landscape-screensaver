@@ -69,19 +69,19 @@
         }
 
         .background {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            opacity: 0;
-            transition: opacity 2s ease-in-out;
-            z-index: 1;
-            /* 初期状態では背景色を黒に設定 */
-            background-color: #000;
-        }
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 2s ease-in-out, background-color 2s ease-in-out;
+    z-index: 1;
+    /* 初期状態では背景色を黒に設定 */
+    background-color: #000;
+}
         
         /* 画像読み込み前の初期状態 */
         .background.loading {
@@ -98,13 +98,19 @@
         
         /* 画像が読み込まれたときのフェードイン効果 */
         .background.fade-in {
-            animation: fadeInImage 1.5s ease-in-out forwards;
+            animation: fadeInImage 2s ease-in-out forwards;
         }
-        /* 画像フェードインアニメーション */
-        @keyframes fadeInImage {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
-        }
+        /* 画像フェードインアニメーション - 修正版 */
+@keyframes fadeInImage {
+    0% { 
+        opacity: 0; 
+        background-color: #1a365d; /* ローディング時の色を維持 */
+    }
+    100% { 
+        opacity: 1;
+        background-color: rgba(0,0,0,0); /* 背景色を透明に - 画像を見せるため */
+    }
+}
 
         .active {
             opacity: 1;
