@@ -2,13 +2,23 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>風景スクリーンセーバー</title>
-    <link rel="manifest" href="manifest.json">
+    
+    <!-- PWA関連メタタグ -->
+    <link rel="manifest" href="/manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-title" content="風景スクリーンセーバー">
+    
+    <!-- アイコン -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.png">
+    
     <style>
         * {
             margin: 0;
@@ -176,6 +186,20 @@
         }
         /* ここまでコントロールパネルのスタイル */
 
+        /* オフラインモード通知 */
+        .offline-notice {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 4px;
+            z-index: 50;
+            font-size: 0.9rem;
+            display: none;
+        }
+
         @media (max-width: 768px) {
             .time {
                 font-size: 5rem;
@@ -198,6 +222,11 @@
 
     <div class="overlay"></div>
     
+    <!-- オフライン通知 -->
+    <div class="offline-notice" id="offline-notice">
+        オフラインモード
+    </div>
+    
     <!-- Backgrounds will be inserted here by JavaScript -->
     
     <div class="clock-container">
@@ -207,9 +236,10 @@
 
     <div class="photo-info" id="photo-info"></div>
     
-    <!-- 新しいコントロールパネル -->
+    <!-- コントロールパネル -->
     <div class="controls" id="controls">
         <button class="controls-button" id="refresh-button">新しい画像を取得</button>
+        <button class="controls-button" id="fullscreen-button">フルスクリーン</button>
     </div>
 
     <script>
@@ -228,10 +258,14 @@
         let isLoading = true;
         let lastScreenWidth = window.innerWidth;
         let lastScreenHeight = window.innerHeight;
+        let isOffline = !navigator.onLine;
 
         // アプリケーション開始
         document.addEventListener('DOMContentLoaded', () => {
             showLoadingIndicator();
+            
+            // オフラインステータスの更新
+            updateOfflineStatus();
             
             // キャッシュをチェック
             const cachedData = checkPhotoCache();
@@ -296,14 +330,51 @@
                 }
             });
             
+            // ネットワーク状態の監視
+            window.addEventListener('online', () => {
+                console.log('Online status detected');
+                isOffline = false;
+                updateOfflineStatus();
+            });
+
+            window.addEventListener('offline', () => {
+                console.log('Offline status detected');
+                isOffline = true;
+                updateOfflineStatus();
+            });
+            
             // 新しい画像を取得ボタンのイベントリスナー
             document.getElementById('refresh-button').addEventListener('click', () => {
                 refreshPhotos();
             });
+            
+            // フルスクリーンボタンのイベントリスナー
+            document.getElementById('fullscreen-button').addEventListener('click', () => {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                    keepAwake();
+                }
+            });
         });
+        
+        // オフライン状態の表示を更新
+        function updateOfflineStatus() {
+            const offlineNotice = document.getElementById('offline-notice');
+            if (isOffline) {
+                offlineNotice.style.display = 'block';
+            } else {
+                offlineNotice.style.display = 'none';
+            }
+        }
         
         // 新しい画像を取得する関数
         function refreshPhotos() {
+            // オフラインモードの場合は処理を中止
+            if (isOffline) {
+                alert('オフライン状態です。インターネット接続を確認してください。');
+                return;
+            }
+            
             // キャッシュをクリア
             localStorage.removeItem(CACHE_KEY);
             
@@ -365,6 +436,11 @@
         // Cloudflare Pages Function経由でUnsplash APIから写真を取得
         async function fetchUnsplashPhotos() {
             try {
+                // オフラインモードの場合はエラーをスロー
+                if (isOffline) {
+                    throw new Error('Currently offline');
+                }
+                
                 console.log('Fetching photos from Unsplash API');
                 // ランダムにキーワードを選択
                 const randomKeyword = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)];
@@ -512,11 +588,18 @@
         // サービスワーカーの登録
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').then(registration => {
-                    console.log('ServiceWorker registered:', registration);
-                }).catch(error => {
-                    console.log('ServiceWorker registration failed:', error);
-                });
+                navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                    .then(registration => {
+                        console.log('ServiceWorker registered successfully:', registration);
+                    })
+                    .catch(error => {
+                        console.error('ServiceWorker registration failed:', error);
+                    });
+            });
+            
+            // インストールイベントを検知
+            window.addEventListener('beforeinstallprompt', (e) => {
+                console.log('Install prompt detected');
             });
         }
 

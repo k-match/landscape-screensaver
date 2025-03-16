@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- 背景 - 暗い青のグラデーション -->
+  <defs>
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1a365d" />
+      <stop offset="100%" stop-color="#2c5282" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 基本の背景 -->
+  <rect width="512" height="512" rx="64" fill="url(#skyGradient)" />
+  
+  <!-- 夕暮れの太陽 -->
+  <circle cx="380" cy="120" r="50" fill="#f6ad55" />
+  
+  <!-- 山々のシルエット -->
+  <!-- 山々のシルエット（角が丸い形状に合わせて調整） -->
+  <path d="M0 330 L100 230 L180 290 L300 180 L420 250 L512 180 L512 448 Q512 480 480 480 L32 480 Q0 480 0 448 Z" fill="#2d3748" />
+  <path d="M0 380 L150 280 L250 330 L380 230 L512 330 L512 448 Q512 480 480 480 L32 480 Q0 480 0 448 Z" fill="#1a202c" />
+  
+  <!-- 時計の円 -->
+  <circle cx="256" cy="256" r="120" fill="none" stroke="white" stroke-width="8" opacity="0.8" />
+  
+  <!-- 時計の針 -->
+  <line x1="256" y1="256" x2="256" y2="176" stroke="white" stroke-width="6" stroke-linecap="round" />
+  <line x1="256" y1="256" x2="306" y2="306" stroke="white" stroke-width="6" stroke-linecap="round" />
+  
+  <!-- 時計の中心点 -->
+  <circle cx="256" cy="256" r="8" fill="white" />
+  
+  <!-- 時間マーカー -->
+  <line x1="256" y1="148" x2="256" y2="168" stroke="white" stroke-width="4" />
+  <line x1="364" y1="256" x2="344" y2="256" stroke="white" stroke-width="4" />
+  <line x1="256" y1="364" x2="256" y2="344" stroke="white" stroke-width="4" />
+  <line x1="148" y1="256" x2="168" y2="256" stroke="white" stroke-width="4" />
+</svg>
