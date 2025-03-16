@@ -951,7 +951,7 @@
       firstImage.onload = () => {
         // 画像が読み込まれたら背景に設定してフェードイン効果を開始
         bg.style.backgroundImage = `url(${photos[i].url})`;
-        // bg.classList.remove('loading');
+        bg.classList.remove('loading');
         bg.classList.add('fade-in');
         
         // その後すぐに2枚目の画像も読み込み開始
