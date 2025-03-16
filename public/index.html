@@ -292,6 +292,9 @@
         // Pages Functions API エンドポイント（相対パス）
         const API_ENDPOINT = '/api/unsplash';
         
+        // フェッチの状態を追跡するフラグ
+        let isUnsplashFetchInProgress = false;
+
         // 変数初期化
         let currentBgIndex = 0;
         let backgrounds = [];
@@ -492,8 +495,27 @@
         // Cloudflare Pages Function経由でUnsplash APIから写真を取得
         async function fetchUnsplashPhotos() {
             try {
+                // 既にフェッチが進行中の場合は、新しいフェッチをスキップ
+                if (isUnsplashFetchInProgress) {
+                    console.log('Fetch already in progress, skipping duplicate fetch');
+                    return new Promise(resolve => {
+                        // 既存のフェッチが完了するまで待機
+                        const checkPhotos = () => {
+                            if (photos.length > 0) {
+                                resolve(photos);
+                            } else {
+                                setTimeout(checkPhotos, 100);
+                            }
+                        };
+                        checkPhotos();
+                    });
+                }
+                
+                isUnsplashFetchInProgress = true;
+                
                 // オフラインモードの場合はエラーをスロー
                 if (isOffline) {
+                    isUnsplashFetchInProgress = false;
                     throw new Error('Currently offline');
                 }
                 
@@ -525,9 +547,11 @@
                 // 各写真に使用したキーワードを関連付ける
                 photoKeywords = Array(data.length).fill(window.lastUsedKeyword || 'landscape');
                 
+                isUnsplashFetchInProgress = false;
                 return data;
             } catch (error) {
                 console.error('Failed to fetch from Unsplash API:', error);
+                isUnsplashFetchInProgress = false;
                 throw error;
             }
         }
