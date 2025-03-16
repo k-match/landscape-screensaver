@@ -82,24 +82,26 @@
             opacity: 1;
         }
 
+        /* 時計のスタイル変更 - 中央配置 */
         .clock-container {
             position: absolute;
-            bottom: 10%;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translate(-50%, -50%);
             z-index: 10;
             text-align: center;
             text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            width: 100%;
         }
 
         .time {
-            font-size: 8rem;
+            font-size: clamp(3rem, 12vw, 10rem);
             font-weight: 200;
             letter-spacing: 4px;
         }
 
         .date {
-            font-size: 2rem;
+            font-size: clamp(1rem, 3vw, 2.5rem);
             font-weight: 300;
             margin-top: 0.5rem;
             opacity: 0.8;
@@ -345,14 +347,8 @@
             display: none;
         }
 
-        /* モバイル対応 */
+        /* モバイル対応 - 更新済み */
         @media (max-width: 768px) {
-            .time {
-                font-size: 5rem;
-            }
-            .date {
-                font-size: 1.5rem;
-            }
             .photo-info {
                 bottom: 10px;
                 right: 10px;
@@ -789,67 +785,6 @@
                     throw new Error('Currently offline');
                 }
                 
-                // デフォルトでは最初のキーワード（landscape）を使用
-                const keyword = selectedKeyword || KEYWORDS[0];
-                const query = keyword;
-                
-                // 使用したキーワードを保存（後で表示するため）
-                window.lastUsedKeyword = keyword;
-                
-                // 画面サイズを取得
-                const screenWidth = window.innerWidth * window.devicePixelRatio;
-                const screenHeight = window.innerHeight * window.devicePixelRatio;
-                
-                // ブラウザキャッシュを避けるためのタイムスタンプを追加
-                const timestamp = window.cacheTimestamp || new Date().getTime();
-                
-                // APIリクエスト（サイズ情報とキャッシュバスティングパラメータを追加）
-                const response = await fetch(`${API_ENDPOINT}?query=${query}&count=${PHOTOS_COUNT}&width=${screenWidth}&height=${screenHeight}&_=${timestamp}`);
-                
-                if (!response.ok) {
-                    throw new Error(`API responded with ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                
-                // 各写真に使用したキーワードを関連付ける
-                photoKeywords = Array(data.length).fill(keyword);
-                
-                isUnsplashFetchInProgress = false;
-                return data;
-            } catch (error) {
-                console.error('Failed to fetch from Unsplash API:', error);
-                isUnsplashFetchInProgress = false;
-                throw error;
-            }
-        }
-        
-        // 特定のキーワードで Unsplash から写真を取得する関数
-        async function fetchUnsplashPhotosWithKeyword(keyword) {
-            try {
-                // 既にフェッチが進行中の場合は、新しいフェッチをスキップ
-                if (isUnsplashFetchInProgress) {
-                    return new Promise(resolve => {
-                        // 既存のフェッチが完了するまで待機
-                        const checkPhotos = () => {
-                            if (photos.length > 0) {
-                                resolve(photos);
-                            } else {
-                                setTimeout(checkPhotos, 100);
-                            }
-                        };
-                        checkPhotos();
-                    });
-                }
-                
-                isUnsplashFetchInProgress = true;
-                
-                // オフラインモードの場合はエラーをスロー
-                if (isOffline) {
-                    isUnsplashFetchInProgress = false;
-                    throw new Error('Currently offline');
-                }
-                
                 // 選択されたキーワードを使用
                 const query = keyword;
                 
@@ -1084,4 +1019,3 @@
         });
     </script>
 </body>
-</html>
