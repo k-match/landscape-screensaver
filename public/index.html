@@ -187,7 +187,7 @@
         /* ここまでコントロールパネルのスタイル */
 
         /* キーワード表示のスタイル */
-        .keywords-container {
+        .current-keyword {
             position: absolute;
             top: 20px;
             left: 20px;
@@ -198,22 +198,7 @@
             backdrop-filter: blur(5px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            max-width: 300px;
-        }
-
-        .keywords-title {
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-bottom: 8px;
-            color: rgba(255, 255, 255, 0.9);
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .keywords-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
+            transition: all 0.3s ease;
         }
 
         .keyword-tag {
@@ -221,14 +206,10 @@
             color: white;
             padding: 4px 8px;
             border-radius: 4px;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             font-weight: 300;
-            transition: all 0.2s ease;
-        }
-
-        .keyword-tag:hover {
-            background-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
+            letter-spacing: 0.5px;
+            text-transform: capitalize;
         }
         /* ここまでキーワード表示のスタイル */
 
@@ -281,12 +262,9 @@
         オフラインモード
     </div>
     
-    <!-- キーワード表示 -->
-    <div class="keywords-container" id="keywords-container">
-        <div class="keywords-title">キーワード</div>
-        <div class="keywords-list" id="keywords-list">
-            <!-- キーワードはJavaScriptで挿入されます -->
-        </div>
+    <!-- 現在の画像のキーワード表示 -->
+    <div class="current-keyword" id="current-keyword">
+        <span class="keyword-tag" id="current-keyword-tag">landscape</span>
     </div>
     
     <!-- Backgrounds will be inserted here by JavaScript -->
@@ -308,7 +286,7 @@
         // 設定
         const KEYWORDS = ['mountains', 'ocean', 'forest', 'sunset', 'winter', 'summer', 'city', 'desert', 'beach', 'night'];
         const CACHE_KEY = 'unsplash_photos_cache';
-        const CACHE_EXPIRY = 2 * 60 * 60 * 1000; // 2時間（ミリ秒）
+        const CACHE_EXPIRY = 2 * 60 * 60 * 1000; // 1時間（ミリ秒）
         const PHOTOS_COUNT = 16; // 一度に取得する画像の数
 
         // Pages Functions API エンドポイント（相対パス）
@@ -318,6 +296,7 @@
         let currentBgIndex = 0;
         let backgrounds = [];
         let photos = [];
+        let photoKeywords = []; // 各写真に使用されたキーワードを格納
         let isLoading = true;
         let lastScreenWidth = window.innerWidth;
         let lastScreenHeight = window.innerHeight;
@@ -329,9 +308,6 @@
             
             // オフラインステータスの更新
             updateOfflineStatus();
-            
-            // キーワードリストの表示
-            displayKeywords();
             
             // キャッシュをチェック
             const cachedData = checkPhotoCache();
@@ -423,17 +399,18 @@
             });
         });
         
-        // キーワードを表示する関数
-        function displayKeywords() {
-            const keywordsListElement = document.getElementById('keywords-list');
-            keywordsListElement.innerHTML = '';
+        // 現在の画像のキーワードを更新する関数
+        function updateCurrentKeyword(index) {
+            const keywordTag = document.getElementById('current-keyword-tag');
             
-            KEYWORDS.forEach(keyword => {
-                const tag = document.createElement('span');
-                tag.className = 'keyword-tag';
-                tag.textContent = keyword;
-                keywordsListElement.appendChild(tag);
-            });
+            // 表示するキーワード
+            let keyword = 'landscape'; // デフォルト値
+            
+            if (photoKeywords && photoKeywords[index]) {
+                keyword = photoKeywords[index];
+            }
+            
+            keywordTag.textContent = keyword;
         }
         
         // オフライン状態の表示を更新
@@ -526,6 +503,9 @@
                 console.log('Random keyword:', randomKeyword);
                 const query = `landscape,${randomKeyword}`;
                 
+                // 使用したキーワードを保存（後で表示するため）
+                window.lastUsedKeyword = randomKeyword;
+                
                 // 画面サイズを取得
                 const screenWidth = window.innerWidth * window.devicePixelRatio;
                 const screenHeight = window.innerHeight * window.devicePixelRatio;
@@ -540,7 +520,12 @@
                     throw new Error(`API responded with ${response.status}: ${response.statusText}`);
                 }
                 
-                return await response.json();
+                const data = await response.json();
+                
+                // 各写真に使用したキーワードを関連付ける
+                photoKeywords = Array(data.length).fill(window.lastUsedKeyword || 'landscape');
+                
+                return data;
             } catch (error) {
                 console.error('Failed to fetch from Unsplash API:', error);
                 throw error;
@@ -561,6 +546,9 @@
                 description: "風景画像",
                 location: ""
             }));
+            
+            // フォールバック用のキーワード
+            photoKeywords = Array(colors.length).fill('fallback');
         }
         
         // 背景要素の初期化
@@ -577,6 +565,7 @@
                 if (i === 0) {
                     bg.classList.add('active');
                     updatePhotoInfo(0);
+                    updateCurrentKeyword(0);
                 }
                 
                 document.body.appendChild(bg);
@@ -623,6 +612,8 @@
             backgrounds[currentBgIndex].classList.add('active');
             // 写真情報を更新
             updatePhotoInfo(currentBgIndex);
+            // キーワードを更新
+            updateCurrentKeyword(currentBgIndex);
         }
 
         // 写真情報の更新
@@ -697,7 +688,7 @@
         // クリックでフルスクリーン表示
         document.addEventListener('click', (e) => {
             // コントロールパネル内のクリックはフルスクリーンを起動しない
-            if (!e.target.closest('#controls') && !e.target.closest('#keywords-container')) {
+            if (!e.target.closest('#controls') && !e.target.closest('#current-keyword')) {
                 if (document.documentElement.requestFullscreen) {
                     document.documentElement.requestFullscreen();
                     keepAwake();
