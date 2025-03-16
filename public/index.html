@@ -1,5 +1,4 @@
-// フェッチの状態を追跡するフラグ
-        let isUnsplashFetchInProgress = false;<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -212,7 +211,6 @@
             letter-spacing: 0.5px;
             text-transform: capitalize;
         }
-        /* ここまでキーワード表示のスタイル */
 
         /* オフラインモード通知 */
         .offline-notice {
@@ -239,13 +237,6 @@
             .photo-info {
                 bottom: 10px;
                 right: 10px;
-            }
-            .keywords-container {
-                max-width: 250px;
-            }
-            .keyword-tag {
-                padding: 3px 6px;
-                font-size: 0.7rem;
             }
         }
     </style>
@@ -284,15 +275,6 @@
     </div>
 
     <script>
-        // 設定
-        const KEYWORDS = ['mountains', 'ocean', 'forest', 'sunset', 'winter', 'summer', 'city', 'desert', 'beach', 'night'];
-        const CACHE_KEY = 'unsplash_photos_cache';
-        const CACHE_EXPIRY = 2 * 60 * 60 * 1000; // 1時間（ミリ秒）
-        const PHOTOS_COUNT = 16; // 一度に取得する画像の数
-
-        // Pages Functions API エンドポイント（相対パス）
-        const API_ENDPOINT = '/api/unsplash';
-        
         // デバッグ用のロギング機能
         function debugLog(message, data = null) {
             const timestamp = new Date().toISOString().substr(11, 8); // HH:MM:SS形式の時刻
@@ -304,6 +286,9 @@
                 console.log(logMessage);
             }
         }
+        
+        // フェッチの状態を追跡するフラグ
+        let isUnsplashFetchInProgress = false;
 
         // 変数初期化
         let currentBgIndex = 0;
@@ -315,6 +300,15 @@
         let lastScreenHeight = window.innerHeight;
         let isOffline = !navigator.onLine;
 
+        // 設定
+        const KEYWORDS = ['mountains', 'ocean', 'forest', 'sunset', 'winter', 'summer', 'city', 'desert', 'beach', 'night'];
+        const CACHE_KEY = 'unsplash_photos_cache';
+        const CACHE_EXPIRY = 2 * 60 * 60 * 1000; // 1時間（ミリ秒）
+        const PHOTOS_COUNT = 16; // 一度に取得する画像の数
+
+        // Pages Functions API エンドポイント（相対パス）
+        const API_ENDPOINT = '/api/unsplash';
+        
         // アプリケーション開始
         document.addEventListener('DOMContentLoaded', () => {
             debugLog('🔄 DOMContentLoaded イベント発生', { 
