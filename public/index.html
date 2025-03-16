@@ -186,71 +186,148 @@
         }
         /* ここまでコントロールパネルのスタイル */
 
-        /* キーワード表示のスタイル */
+        /* キーワード関連のスタイルをすべて置き換える */
+
+        /* 現在のキーワード表示 */
         .current-keyword {
             position: absolute;
             top: 20px;
             left: 20px;
             z-index: 50;
-            background-color: rgba(0, 0, 0, 0.5);
-            border-radius: 8px;
-            padding: 10px 15px;
-            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 8px 12px;
+            backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
         }
 
         .keyword-tag {
-            background-color: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 6px;
             color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            font-weight: 300;
+            font-size: 0.95rem;
+            font-weight: 400;
             letter-spacing: 0.5px;
             text-transform: capitalize;
             cursor: pointer;
+            transition: all 0.2s ease;
         }
 
         .keyword-tag:hover {
-            background-color: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
         }
 
-        /* キーワードセレクターのスタイル */
+        .keyword-tag-icon {
+            font-size: 1.2rem;
+        }
+
+        .keyword-tag::after {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin-left: 5px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+            transition: transform 0.3s ease;
+        }
+
+        /* キーワード選択パネル */
         .keyword-selector {
             position: absolute;
-            top: 60px;
+            top: 70px;
             left: 20px;
             z-index: 50;
-            background-color: rgba(0, 0, 0, 0.5);
-            border-radius: 8px;
-            padding: 10px 15px;
-            backdrop-filter: blur(5px);
+            background-color: rgba(0, 0, 0, 0.65);
+            border-radius: 16px;
+            padding: 16px;
+            backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            display: none;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+            opacity: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            width: auto;
+            max-width: 80vw;
         }
 
-        .keyword-dropdown {
-            background-color: rgba(0, 0, 0, 0.3);
+        .keyword-selector.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .keyword-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background-color: rgba(255, 255, 255, 0.1);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-            padding: 6px 10px;
+            padding: 8px 14px;
+            border-radius: 30px;
             font-size: 0.9rem;
-            width: 200px;
+            font-weight: 300;
             cursor: pointer;
-            outline: none;
+            transition: all 0.25s ease;
+            border: 1px solid transparent;
         }
 
-        .keyword-dropdown:focus {
+        .keyword-chip:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .keyword-chip.active {
+            background-color: rgba(255, 255, 255, 0.25);
             border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            font-weight: 500;
         }
 
-        .keyword-dropdown option {
-            background-color: rgba(30, 30, 30, 0.9);
+        .keyword-chip-icon {
+            font-size: 1.1rem;
+        }
+
+        /* アニメーション強化 */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .keyword-tag:hover .keyword-tag-icon {
+            animation: pulse 1s ease infinite;
+        }
+
+        .keyword-tag:hover::after {
+            transform: rotate(180deg);
+        }
+
+        @keyframes selectPulse {
+            0% { box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
+            50% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.3); }
+            100% { box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
+        }
+
+        .keyword-chip.active {
+            animation: selectPulse 2s infinite;
+        }
+
+        .keyword-chip:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         /* オフラインモード通知 */
@@ -268,6 +345,7 @@
             display: none;
         }
 
+        /* モバイル対応 */
         @media (max-width: 768px) {
             .time {
                 font-size: 5rem;
@@ -278,6 +356,17 @@
             .photo-info {
                 bottom: 10px;
                 right: 10px;
+            }
+            .keyword-selector {
+                left: 10px;
+                right: 10px;
+                max-width: calc(100% - 20px);
+                justify-content: center;
+            }
+            
+            .keyword-chip {
+                padding: 6px 10px;
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -297,14 +386,15 @@
     
     <!-- 現在の画像のキーワード表示 -->
     <div class="current-keyword" id="current-keyword">
-        <span class="keyword-tag" id="current-keyword-tag">landscape</span>
+        <span class="keyword-tag" id="current-keyword-tag">
+            <span class="keyword-tag-icon">🏞️</span>
+            <span class="keyword-tag-text">landscape</span>
+        </span>
     </div>
-    
-    <!-- キーワード選択ドロップダウン -->
+
+    <!-- キーワード選択パネル (タグクラウド) -->
     <div class="keyword-selector" id="keyword-selector">
-        <select id="keyword-dropdown" class="keyword-dropdown">
-            <!-- オプションはJavaScriptで動的に生成されます -->
-        </select>
+        <!-- JavaScriptで動的に生成されます -->
     </div>
     
     <!-- Backgrounds will be inserted here by JavaScript -->
@@ -356,6 +446,21 @@
             'night': '夜景'
         };
 
+        // キーワードアイコンマッピング
+        const KEYWORDS_ICONS = {
+            'landscape': '🏞️',
+            'mountains': '🏔️',
+            'ocean': '🌊',
+            'forest': '🌲',
+            'sunset': '🌅',
+            'winter': '❄️',
+            'summer': '☀️',
+            'city': '🏙️',
+            'desert': '🏜️',
+            'beach': '🏖️',
+            'night': '🌃'
+        };
+
         // Pages Functions API エンドポイント（相対パス）
         const API_ENDPOINT = '/api/unsplash';
         
@@ -366,8 +471,8 @@
             // オフラインステータスの更新
             updateOfflineStatus();
             
-            // キーワードドロップダウンの初期化
-            initializeKeywordDropdown();
+            // キーワードセレクターの初期化
+            initializeKeywordSelector();
             
             // キャッシュをチェック
             const cachedData = checkPhotoCache();
@@ -456,63 +561,119 @@
                 }
             });
             
-            // キーワードタグのクリックでセレクタを表示
+            // キーワードタグのクリックでセレクタを表示/非表示
             document.getElementById('current-keyword-tag').addEventListener('click', (e) => {
-                const keywordSelector = document.getElementById('keyword-selector');
-                keywordSelector.style.display = keywordSelector.style.display === 'none' || keywordSelector.style.display === '' ? 'block' : 'none';
+                toggleKeywordSelector();
                 e.stopPropagation();
-            });
-
-            // キーワードドロップダウンの変更イベント
-            document.getElementById('keyword-dropdown').addEventListener('change', (e) => {
-                selectedKeyword = e.target.value;
-                
-                // 現在のキーワードタグを更新
-                const keywordTag = document.getElementById('current-keyword-tag');
-                keywordTag.textContent = selectedKeyword;
-                
-                // キーワードセレクタを非表示
-                document.getElementById('keyword-selector').style.display = 'none';
-                
-                // 新しいキーワードで画像を取得
-                refreshPhotosWithKeyword(selectedKeyword);
             });
 
             // ドキュメントクリックでセレクタを非表示
             document.addEventListener('click', (e) => {
-                if (!e.target.closest('#keyword-selector') && !e.target.closest('#current-keyword-tag')) {
-                    document.getElementById('keyword-selector').style.display = 'none';
+                if (!e.target.closest('#keyword-selector') && !e.target.closest('#current-keyword')) {
+                    toggleKeywordSelector(false);
+                }
+            });
+
+            // ESCキーでセレクタを閉じる
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    toggleKeywordSelector(false);
                 }
             });
         });
         
-        // キーワードドロップダウンの初期化
-        function initializeKeywordDropdown() {
-            const dropdown = document.getElementById('keyword-dropdown');
+        // キーワード選択パネルの初期化
+        function initializeKeywordSelector() {
+            const keywordSelector = document.getElementById('keyword-selector');
             
-            // 既存のオプションをクリア
-            dropdown.innerHTML = '';
+            // 既存の内容をクリア
+            keywordSelector.innerHTML = '';
             
-            // KEYWORDS配列からオプションを生成
+            // KEYWORDS配列から選択チップを生成
             KEYWORDS.forEach(keyword => {
-                const option = document.createElement('option');
-                option.value = keyword;
+                const chip = document.createElement('div');
+                chip.className = 'keyword-chip';
+                if (keyword === selectedKeyword) {
+                    chip.classList.add('active');
+                }
+                chip.dataset.keyword = keyword;
                 
-                // 日本語名があれば使用、なければそのままキーワードを表示
+                // 日本語名とアイコンを表示
                 const jpName = KEYWORDS_JP[keyword] || keyword;
-                option.textContent = `${jpName} (${keyword})`;
+                const icon = KEYWORDS_ICONS[keyword] || '';
                 
-                dropdown.appendChild(option);
+                chip.innerHTML = `
+                    <span class="keyword-chip-icon">${icon}</span>
+                    <span>${jpName}</span>
+                `;
+                
+                // クリックイベント
+                chip.addEventListener('click', () => {
+                    selectKeyword(keyword);
+                });
+                
+                keywordSelector.appendChild(chip);
             });
             
-            // デフォルトで現在選択されているキーワードを選択
-            dropdown.value = selectedKeyword;
+            // 現在選択されているキーワードのタグも更新
+            updateCurrentKeywordTag(selectedKeyword);
+        }
+
+        // 現在のキーワードタグを更新
+        function updateCurrentKeywordTag(keyword) {
+            const keywordTag = document.getElementById('current-keyword-tag');
+            const icon = KEYWORDS_ICONS[keyword] || '';
+            
+            keywordTag.innerHTML = `
+                <span class="keyword-tag-icon">${icon}</span>
+                <span class="keyword-tag-text">${keyword}</span>
+            `;
+        }
+
+        // キーワードを選択して画像を取得
+        function selectKeyword(keyword) {
+            // 前の選択を解除
+            const activeChip = document.querySelector('.keyword-chip.active');
+            if (activeChip) {
+                activeChip.classList.remove('active');
+            }
+            
+            // 新しい選択をアクティブに
+            const newActiveChip = document.querySelector(`.keyword-chip[data-keyword="${keyword}"]`);
+            if (newActiveChip) {
+                newActiveChip.classList.add('active');
+            }
+            
+            // 選択したキーワードを保存
+            selectedKeyword = keyword;
+            
+            // 現在のキーワードタグを更新
+            updateCurrentKeywordTag(keyword);
+            
+            // キーワードセレクタをスムーズに閉じる
+            toggleKeywordSelector(false);
+            
+            // 新しいキーワードで画像を取得
+            refreshPhotosWithKeyword(keyword);
+        }
+
+        // キーワードセレクタの表示/非表示を切り替え
+        function toggleKeywordSelector(show = null) {
+            const keywordSelector = document.getElementById('keyword-selector');
+            const isCurrentlyShown = keywordSelector.classList.contains('active');
+            
+            // 引数がnullの場合はトグル、そうでなければ指定された状態に
+            const shouldShow = show === null ? !isCurrentlyShown : show;
+            
+            if (shouldShow) {
+                keywordSelector.classList.add('active');
+            } else {
+                keywordSelector.classList.remove('active');
+            }
         }
         
         // 現在の画像のキーワードを更新する関数
         function updateCurrentKeyword(index) {
-            const keywordTag = document.getElementById('current-keyword-tag');
-            
             // 表示するキーワード
             let keyword = 'landscape'; // デフォルト値
             
@@ -520,7 +681,8 @@
                 keyword = photoKeywords[index];
             }
             
-            keywordTag.textContent = keyword;
+            // タグを更新
+            updateCurrentKeywordTag(keyword);
         }
         
         // オフライン状態の表示を更新
@@ -887,15 +1049,33 @@
             KEYWORDS.length = 0; // 配列をクリア
             newKeywords.forEach(keyword => KEYWORDS.push(keyword));
             
-            // ドロップダウンを再初期化
-            initializeKeywordDropdown();
+            // キーワードセレクターを再初期化
+            initializeKeywordSelector();
             
             // 現在選択されているキーワードがまだ有効かチェック
             if (!KEYWORDS.includes(selectedKeyword)) {
                 // 選択されたキーワードが有効でなくなった場合は最初のキーワードを選択
                 selectedKeyword = KEYWORDS[0];
-                document.getElementById('current-keyword-tag').textContent = selectedKeyword;
+                updateCurrentKeywordTag(selectedKeyword);
             }
+        }
+        
+        // キーワードが変更されたときのアニメーション効果
+        function animateKeywordChange(keyword) {
+            // 現在のタグに一時的なクラスを追加
+            const currentTag = document.getElementById('current-keyword-tag');
+            currentTag.classList.add('keyword-changed');
+            
+            // フラッシュ効果のためのオーバーレイを作成
+            const flash = document.createElement('div');
+            flash.className = 'keyword-change-flash';
+            document.body.appendChild(flash);
+            
+            // タイミングを調整
+            setTimeout(() => {
+                flash.remove();
+                currentTag.classList.remove('keyword-changed');
+            }, 700);
         }
         
         // サービスワーカーの登録
