@@ -1,5 +1,5 @@
 // functions/api/unsplash.js
-// Cloudflare Pages Functionsとして配置
+// KVストレージのキャッシュ機能を削除したシンプル版
 
 export async function onRequest(context) {
     // リクエストの取得
@@ -10,9 +10,6 @@ export async function onRequest(context) {
     const query = url.searchParams.get('query') || 'landscape';
     const count = parseInt(url.searchParams.get('count') || '5', 10);
     
-    // キャッシュキーの作成
-    const cacheKey = `${query}-${count}`;
-    
     // 環境変数からAPIキーを取得
     const apiKey = context.env.UNSPLASH_API_KEY;
     
@@ -20,26 +17,19 @@ export async function onRequest(context) {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET,OPTIONS',
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Cache-Control': 'max-age=600' // 10分間のブラウザキャッシュを設定
     };
     
+    // OPTIONSリクエスト（プリフライト）への対応
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        headers: corsHeaders
+      });
+    }
+    
     try {
-      // KVストレージがある場合はキャッシュをチェック
-      if (context.env.UNSPLASH_CACHE) {
-        const cachedData = await context.env.UNSPLASH_CACHE.get(cacheKey, 'json');
-        
-        if (cachedData && cachedData.timestamp) {
-          const now = Date.now();
-          // 3時間以内のキャッシュなら使用
-          if (now - cachedData.timestamp < 3 * 60 * 60 * 1000) {
-            return new Response(JSON.stringify(cachedData.data), {
-              headers: corsHeaders
-            });
-          }
-        }
-      }
-      
-      // Unsplash APIの呼び出し
+      // Unsplash APIの直接呼び出し（キャッシュなし）
       const apiUrl = `https://api.unsplash.com/photos/random?query=${query}&count=${count}&orientation=landscape`;
       const response = await fetch(apiUrl, {
         headers: {
@@ -71,15 +61,7 @@ export async function onRequest(context) {
         }
       }));
       
-      // KVストレージがある場合はキャッシュに保存
-      if (context.env.UNSPLASH_CACHE) {
-        await context.env.UNSPLASH_CACHE.put(cacheKey, JSON.stringify({
-          timestamp: Date.now(),
-          data: processedData
-        }), {expirationTtl: 10800}); // 3時間（秒単位）
-      }
-      
-      // 結果を返す
+      // 結果を返す（KVキャッシュなし）
       return new Response(JSON.stringify(processedData), {
         headers: corsHeaders
       });

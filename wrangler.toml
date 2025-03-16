@@ -1,0 +1,7 @@
+# wrangler.toml
+# KVストレージの設定を削除したシンプル版
+name = "landscape-screensaver"
+
+# ページの設定
+[site]
+bucket = "./public"  # 静的ファイルが格納されるディレクトリ
