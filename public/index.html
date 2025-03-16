@@ -431,35 +431,6 @@
         const CACHE_EXPIRY = 2 * 60 * 60 * 1000; // 2時間（ミリ秒）
         const PHOTOS_COUNT = 16; // 一度に取得する画像の数
 
-        // 日本語キーワードマッピング
-        const KEYWORDS_JP = {
-            'landscape': '景色',
-            'mountains': '山',
-            'ocean': '海',
-            'forest': '森',
-            'sunset': '夕日',
-            'winter': '冬',
-            'summer': '夏',
-            'city': '都市',
-            'desert': '砂漠',
-            'beach': 'ビーチ',
-            'night': '夜景'
-        };
-
-        // キーワードアイコンマッピング
-        const KEYWORDS_ICONS = {
-            'landscape': '🏞️',
-            'mountains': '🏔️',
-            'ocean': '🌊',
-            'forest': '🌲',
-            'sunset': '🌅',
-            'winter': '❄️',
-            'summer': '☀️',
-            'city': '🏙️',
-            'desert': '🏜️',
-            'beach': '🏖️',
-            'night': '🌃'
-        };
 
         // Pages Functions API エンドポイント（相対パス）
         const API_ENDPOINT = '/api/unsplash';
@@ -584,49 +555,43 @@
         
         // キーワード選択パネルの初期化
         function initializeKeywordSelector() {
-            const keywordSelector = document.getElementById('keyword-selector');
-            
-            // 既存の内容をクリア
-            keywordSelector.innerHTML = '';
-            
-            // KEYWORDS配列から選択チップを生成
-            KEYWORDS.forEach(keyword => {
-                const chip = document.createElement('div');
-                chip.className = 'keyword-chip';
-                if (keyword === selectedKeyword) {
-                    chip.classList.add('active');
-                }
-                chip.dataset.keyword = keyword;
-                
-                // 日本語名とアイコンを表示
-                const jpName = KEYWORDS_JP[keyword] || keyword;
-                const icon = KEYWORDS_ICONS[keyword] || '';
-                
-                chip.innerHTML = `
-                    <span class="keyword-chip-icon">${icon}</span>
-                    <span>${jpName}</span>
-                `;
-                
-                // クリックイベント
-                chip.addEventListener('click', () => {
-                    selectKeyword(keyword);
-                });
-                
-                keywordSelector.appendChild(chip);
-            });
-            
-            // 現在選択されているキーワードのタグも更新
-            updateCurrentKeywordTag(selectedKeyword);
+    const keywordSelector = document.getElementById('keyword-selector');
+    
+    // 既存の内容をクリア
+    keywordSelector.innerHTML = '';
+    
+    // KEYWORDS配列から選択チップを生成
+    KEYWORDS.forEach(keyword => {
+        const chip = document.createElement('div');
+        chip.className = 'keyword-chip';
+        if (keyword === selectedKeyword) {
+            chip.classList.add('active');
         }
+        chip.dataset.keyword = keyword;
+        
+        // 英語のキーワードを表示
+        chip.innerHTML = `
+            <span>${keyword}</span>
+        `;
+        
+        // クリックイベント
+        chip.addEventListener('click', () => {
+            selectKeyword(keyword);
+        });
+        
+        keywordSelector.appendChild(chip);
+    });
+    
+    // 現在選択されているキーワードのタグも更新
+    updateCurrentKeywordTag(selectedKeyword);
+}
 
         // 現在のキーワードタグを更新
         function updateCurrentKeywordTag(keyword) {
             const keywordTag = document.getElementById('current-keyword-tag');
-            const icon = KEYWORDS_ICONS[keyword] || '';
-            
+    
             keywordTag.innerHTML = `
-                <span class="keyword-tag-icon">${icon}</span>
-                <span class="keyword-tag-text">${keyword}</span>
+            <span class="keyword-tag-text">${keyword}</span>
             `;
         }
 
