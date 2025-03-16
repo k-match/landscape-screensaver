@@ -309,12 +309,9 @@
         // Pages Functions API エンドポイント（相対パス）
         const API_ENDPOINT = '/api/unsplash';
         
-        // アプリケーション開始
-        document.addEventListener('DOMContentLoaded', () => {
-            debugLog('🔄 DOMContentLoaded イベント発生', { 
-                eventSource: 'DOMContentLoaded',
-                stack: new Error().stack
-            });
+        // アプリケーションのメイン初期化関数
+        function initializeApp() {
+            debugLog('🔄 アプリケーション初期化開始');
             
             showLoadingIndicator();
             
@@ -333,7 +330,7 @@
                 hideLoadingIndicator();
             } else {
                 // 新しいデータを取得
-                debugLog('🌐 新しいデータを取得します', { caller: 'DOMContentLoaded' });
+                debugLog('🌐 新しいデータを取得します', { caller: 'initializeApp' });
                 fetchUnsplashPhotos()
                     .then(data => {
                         debugLog('✅ 写真の取得に成功しました', { count: data.length });
@@ -356,6 +353,10 @@
             updateClock();
             setInterval(updateClock, 1000);
             setInterval(changeBackground, 20000); // 20秒ごとに背景を変更
+        }
+        
+        // サービスワーカーの登録状態を追跡するフラグ
+        let isServiceWorkerInitialized = false;
             
             // 画面サイズの変更を監視
             window.addEventListener('resize', () => {
@@ -386,16 +387,19 @@
                         });
                 }
             });
-            
+        }
+        
+        // アプリケーション全体の初期イベントリスナー設定（サービスワーカーの状態に関わらず必要なもの）
+        document.addEventListener('DOMContentLoaded', () => {
             // ネットワーク状態の監視
             window.addEventListener('online', () => {
-                console.log('Online status detected');
+                debugLog('🌐 オンライン状態を検出');
                 isOffline = false;
                 updateOfflineStatus();
             });
 
             window.addEventListener('offline', () => {
-                console.log('Offline status detected');
+                debugLog('🌐 オフライン状態を検出');
                 isOffline = true;
                 updateOfflineStatus();
             });
@@ -412,6 +416,17 @@
                     keepAwake();
                 }
             });
+            
+            // サービスワーカーがある場合、まずそちらの登録を待つ
+            if ('serviceWorker' in navigator) {
+                debugLog('🔄 DOMContentLoadedでサービスワーカー登録を開始');
+                registerServiceWorker();
+            } else {
+                // サービスワーカーがサポートされていない場合は直接初期化
+                debugLog('⚠️ ServiceWorkerがサポートされていません、直接初期化します');
+                initializeApp();
+            }
+        });
         });
         
         // 現在の画像のキーワードを更新する関数
@@ -717,29 +732,66 @@
             }, 500);
         }
         
-        // サービスワーカーの登録
+        // インストールイベントを検知
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                debugLog('🔄 window.load イベント発生', {
-                    eventSource: 'window.load',
-                    stack: new Error().stack
-                });
-                
-                navigator.serviceWorker.register('/sw.js', { scope: '/' })
-                    .then(registration => {
-                        debugLog('✅ ServiceWorker 登録成功', registration.scope);
-                        console.log('ServiceWorker registered successfully:', registration);
-                    })
-                    .catch(error => {
-                        debugLog('❌ ServiceWorker 登録失敗', error);
-                        console.error('ServiceWorker registration failed:', error);
-                    });
-            });
-            
-            // インストールイベントを検知
             window.addEventListener('beforeinstallprompt', (e) => {
                 debugLog('📱 インストールプロンプト検出');
                 console.log('Install prompt detected');
+            });
+        }
+        
+        // サービスワーカー登録関数
+        function registerServiceWorker() {
+            debugLog('🔄 サービスワーカー登録開始');
+            
+            // すでに登録済みのサービスワーカーを確認
+            navigator.serviceWorker.getRegistration().then(registration => {
+                if (registration) {
+                    debugLog('ℹ️ サービスワーカーはすでに登録済み', registration.scope);
+                    
+                    // 登録済みのサービスワーカーがあれば初期化処理を開始
+                    if (!isServiceWorkerInitialized) {
+                        isServiceWorkerInitialized = true;
+                        debugLog('✅ 既存サービスワーカー確認後にアプリ初期化を実行');
+                        initializeApp();
+                    }
+                } else {
+                    // 登録済みのサービスワーカーがなければ新規登録
+                    debugLog('ℹ️ サービスワーカーを新規登録します');
+                    
+                    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                        .then(registration => {
+                            debugLog('✅ ServiceWorker 登録成功', registration.scope);
+                            console.log('ServiceWorker registered successfully:', registration);
+                            
+                            // 登録が完了したら、初期化フラグをセットして初期化処理を開始
+                            if (!isServiceWorkerInitialized) {
+                                isServiceWorkerInitialized = true;
+                                debugLog('✅ サービスワーカー登録後にアプリ初期化を実行');
+                                initializeApp();
+                            }
+                        })
+                        .catch(error => {
+                            debugLog('❌ ServiceWorker 登録失敗', error);
+                            console.error('ServiceWorker registration failed:', error);
+                            
+                            // エラーが発生した場合も初期化処理を行う
+                            if (!isServiceWorkerInitialized) {
+                                isServiceWorkerInitialized = true;
+                                debugLog('⚠️ サービスワーカー登録失敗後、アプリ初期化を実行');
+                                initializeApp();
+                            }
+                        });
+                }
+            }).catch(error => {
+                debugLog('❌ サービスワーカー確認エラー', error);
+                
+                // エラーが発生した場合も初期化処理を行う
+                if (!isServiceWorkerInitialized) {
+                    isServiceWorkerInitialized = true;
+                    debugLog('⚠️ サービスワーカー確認エラー後、アプリ初期化を実行');
+                    initializeApp();
+                }
             });
         }
 
