@@ -84,12 +84,13 @@
 
         .clock-container {
             position: absolute;
-            bottom: 10%;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translate(-50%, -50%);
             z-index: 10;
             text-align: center;
             text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            width: 100%;
         }
 
         .time {
@@ -348,10 +349,15 @@
         /* モバイル対応 */
         @media (max-width: 768px) {
             .time {
-                font-size: 5rem;
+                font-size: clamp(5rem, 15vw, 12rem);
+                font-weight: 200;
+                letter-spacing: 4px;
             }
             .date {
-                font-size: 1.5rem;
+                font-size: clamp(1.5rem, 4vw, 3rem);
+                font-weight: 300;
+                margin-top: 0.5rem;
+                opacity: 0.8;
             }
             .photo-info {
                 bottom: 10px;
