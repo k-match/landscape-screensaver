@@ -1,12 +1,8 @@
 const CACHE_NAME = 'landscape-screensaver-v1';
-const BASE_PATH = location.pathname.includes('github.io') ? '/landscape-screensaver' : '';
-const urlsToCache = [
-  `${BASE_PATH}/`,
-  `${BASE_PATH}/index.html`,
-  `${BASE_PATH}/manifest.json`
-  // 画像ファイルを追加する場合はここに追加します
-  // `${BASE_PATH}/images/landscape1.jpg`,
-  // `${BASE_PATH}/images/landscape2.jpg`
+const CACHED_URLS = [
+  '/',
+  '/index.html',
+  '/manifest.json'
 ];
 
 // インストール時にリソースをキャッシュ
@@ -14,13 +10,18 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        return cache.addAll(urlsToCache);
+        return cache.addAll(CACHED_URLS);
       })
   );
 });
 
 // ネットワークリクエストをインターセプト
 self.addEventListener('fetch', event => {
+  // API呼び出しはキャッシュしない
+  if (event.request.url.includes('/api/')) {
+    return;
+  }
+  
   event.respondWith(
     caches.match(event.request)
       .then(response => {
@@ -46,10 +47,11 @@ self.addEventListener('fetch', event => {
             return response;
           }
         ).catch(error => {
-          // ネットワークエラー時、オフライン表示用のフォールバック
           console.log('Fetch failed; returning offline page instead.', error);
-          // カスタムオフラインページがある場合はそれを返す
-          // return caches.match('offline.html');
+          // オフライン時の処理
+          if (event.request.headers.get('accept').includes('text/html')) {
+            return caches.match('/index.html');
+          }
         });
       })
     );
