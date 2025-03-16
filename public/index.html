@@ -262,6 +262,7 @@
         // Cloudflare Pages Function経由でUnsplash APIから写真を取得
         async function fetchUnsplashPhotos() {
             try {
+                console.log('Fetching photos from Unsplash API');
                 // ランダムにキーワードを選択
                 const randomKeyword = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)];
                 const query = `landscape,${randomKeyword}`;
