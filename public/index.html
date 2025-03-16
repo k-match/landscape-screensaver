@@ -244,9 +244,9 @@
 
     <script>
         // 設定
-        const KEYWORDS = ['mountains', 'ocean', 'forest', 'sunset', 'winter'];
+        const KEYWORDS = ['mountains', 'ocean', 'forest', 'sunset', 'winter', 'summer', 'city', 'desert', 'beach', 'night'];
         const CACHE_KEY = 'unsplash_photos_cache';
-        const CACHE_EXPIRY = 2 * 60 * 60 * 1000; // 2時間（ミリ秒）
+        const CACHE_EXPIRY = 1 * 60 * 60 * 1000; // 1時間（ミリ秒）
 
         // Pages Functions API エンドポイント（相対パス）
         const API_ENDPOINT = '/api/unsplash';
@@ -444,6 +444,7 @@
                 console.log('Fetching photos from Unsplash API');
                 // ランダムにキーワードを選択
                 const randomKeyword = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)];
+                console.log('Random keyword:', randomKeyword);
                 const query = `landscape,${randomKeyword}`;
                 
                 // 画面サイズを取得
