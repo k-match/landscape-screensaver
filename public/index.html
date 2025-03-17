@@ -1029,6 +1029,7 @@ function changeBackground() {
   
   // 次の背景インデックスに進む
   currentBgIndex = (currentBgIndex + 1) % backgrounds.length;
+  console.log(`Switching to background ${currentBgIndex}`);
   
   // 次の背景要素
   const nextBg = backgrounds[currentBgIndex];
