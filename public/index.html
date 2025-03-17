@@ -1023,20 +1023,19 @@
         }
 
         // 背景画像の切り替え（レイジーローディング対応）
+// 背景画像の切り替え（レイジーローディング対応）
 function changeBackground() {
   // 現在の背景を非アクティブにする
   backgrounds[currentBgIndex].classList.remove('active');
   
   // 次の背景インデックスに進む
   currentBgIndex = (currentBgIndex + 1) % backgrounds.length;
-  console.log(`Switching to background ${currentBgIndex}`);
   
   // 次の背景要素
   const nextBg = backgrounds[currentBgIndex];
-  console.log(nextBg);
   
-  // 画像がまだ読み込まれていない場合
-  if (nextBg.dataset.backgroundImage) {
+  // URLをクリアする代わりに、読み込み済みフラグを使用
+  if (nextBg.dataset.backgroundImage && nextBg.dataset.loaded !== 'true') {
     // 初期状態にローディングクラスを追加（黒背景から始まる）
     nextBg.classList.add('loading');
     
@@ -1045,7 +1044,8 @@ function changeBackground() {
     nextImage.onload = () => {
       // 画像が読み込まれたら背景に設定
       nextBg.style.backgroundImage = `url(${nextBg.dataset.backgroundImage})`;
-      nextBg.dataset.backgroundImage = '';
+      // URLをクリアする代わりに読み込み済みフラグを設定
+      nextBg.dataset.loaded = 'true';
       
       // フェードイン効果を適用
       nextBg.classList.remove('loading');
@@ -1060,6 +1060,11 @@ function changeBackground() {
   // 写真情報とキーワードを更新
   updatePhotoInfo(currentBgIndex);
   updateCurrentKeyword(currentBgIndex);
+  
+  // インデックスが0に戻った場合（1サイクル完了）、読み込み済みフラグをリセット
+  if (currentBgIndex === 0) {
+    resetBackgroundLoadFlags();
+  }
   
   // その次の背景も事前に読み込む
   const preloadIndex = (currentBgIndex + 1) % backgrounds.length;
@@ -1076,6 +1081,17 @@ function changeBackground() {
       }, 2000); // 2秒後に読み込み開始（負荷を分散）
     }
   }
+}
+
+// 背景要素の読み込み済みフラグをリセットする新しい関数
+function resetBackgroundLoadFlags() {
+  backgrounds.forEach(bg => {
+    // 読み込み済みフラグをリセット
+    if (bg.dataset.backgroundImage) {
+      bg.dataset.loaded = 'false';
+    }
+  });
+  console.log('Background load flags reset for new cycle');
 }
 
         // 写真情報の更新
