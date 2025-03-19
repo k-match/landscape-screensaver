@@ -1023,17 +1023,16 @@
         }
 
         // 背景画像の切り替え（レイジーローディング対応）
+// 修正後のコード
 function changeBackground() {
   // 現在の背景を非アクティブにする
   backgrounds[currentBgIndex].classList.remove('active');
   
   // 次の背景インデックスに進む
   currentBgIndex = (currentBgIndex + 1) % backgrounds.length;
-  console.log(`Switching to background ${currentBgIndex}`);
   
   // 次の背景要素
   const nextBg = backgrounds[currentBgIndex];
-  console.log(nextBg);
   
   // 画像がまだ読み込まれていない場合
   if (nextBg.dataset.backgroundImage) {
@@ -1045,7 +1044,7 @@ function changeBackground() {
     nextImage.onload = () => {
       // 画像が読み込まれたら背景に設定
       nextBg.style.backgroundImage = `url(${nextBg.dataset.backgroundImage})`;
-      nextBg.dataset.backgroundImage = '';
+      // dataset.backgroundImageをクリアする行を削除
       
       // フェードイン効果を適用
       nextBg.classList.remove('loading');
