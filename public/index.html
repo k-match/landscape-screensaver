@@ -985,6 +985,7 @@ function initializeBackgrounds() {
 
 // 画像をプリロードするシンプルな関数
 function preloadImage(url) {
+    console.log(`画像をプリロード: ${url}`);
   const img = new Image();
   img.src = url;
 }
@@ -1021,7 +1022,7 @@ function preloadImage(url) {
             document.getElementById('date').textContent = dateString;
         }
 
-// 背景画像の切り替え（最適化版）
+// 背景画像の切り替え（完全修正版）
 function changeBackground() {
   console.log(`changeBackground: 現在=${currentBgIndex}, 総数=${backgrounds.length}`);
   
@@ -1033,24 +1034,23 @@ function changeBackground() {
   
   // 次の背景要素
   const nextBg = backgrounds[currentBgIndex];
-  const photoIndex = parseInt(nextBg.dataset.photoIndex);
+  const photoIndex = parseInt(nextBg.dataset.photoIndex || currentBgIndex);
   
   console.log(`次の背景: index=${currentBgIndex}, photoIndex=${photoIndex}, hasDatasetBg=${!!nextBg.dataset.backgroundImage}, hasStyleBg=${!!nextBg.style.backgroundImage}`);
   
-  // 画像がまだ読み込まれていない場合
+  // ケース1: 画像がまだ読み込まれていない場合（dataset.backgroundImageあり、style.backgroundImageなし）
   if (nextBg.dataset.backgroundImage && !nextBg.style.backgroundImage) {
-    console.log(`画像読み込み開始: ${nextBg.dataset.backgroundImage}`);
+    console.log(`ケース1: 初回読み込み - dataset.backgroundImageから読み込み`);
+    
     // 初期状態にローディングクラスを追加
     nextBg.classList.add('loading');
     
     // 非同期で画像を読み込む
     const nextImage = new Image();
     nextImage.onload = () => {
-      console.log(`画像読み込み完了`);
       // 画像が読み込まれたら背景に設定
       nextBg.style.backgroundImage = `url(${nextBg.dataset.backgroundImage})`;
-      // この行を削除（クリアしない）
-      // nextBg.dataset.backgroundImage = '';
+      // dataset.backgroundImageはクリアしない！
       
       // フェードイン効果を適用
       nextBg.classList.remove('loading');
@@ -1058,40 +1058,62 @@ function changeBackground() {
     };
     nextImage.src = nextBg.dataset.backgroundImage;
   } 
+  // ケース2: 画像が既に読み込まれている場合（style.backgroundImageあり）
   else if (nextBg.style.backgroundImage) {
-    console.log(`画像はすでに読み込まれています`);
-    // 画像が読み込まれている場合はフェードイン効果のみ
-    if (!nextBg.classList.contains('fade-in')) {
-      nextBg.classList.add('fade-in');
-    }
-  }
-  // スタイルが設定されていない＆データセットも空の場合（2周目以降で問題発生時）
-  else if (!nextBg.style.backgroundImage) {
-    console.log(`緊急修正: photos配列から直接URL取得`);
-    // photos配列から直接URLを取得
-    const photoUrl = photos[photoIndex || currentBgIndex].url;
-    nextBg.style.backgroundImage = `url(${photoUrl})`;
-    // 今後のためにデータセット属性も設定
-    nextBg.dataset.backgroundImage = photoUrl;
+    console.log(`ケース2: 既に画像読み込み済み - style.backgroundImageを使用`);
     
+    // 必要に応じてフェードイン効果を再適用
     if (!nextBg.classList.contains('fade-in')) {
       nextBg.classList.add('fade-in');
     }
+    
+    // すでに読み込まれている画像を再表示するためのトリガー
+    // 同じURLでも再度設定することで表示を確実にする
+    const currentBgUrl = nextBg.style.backgroundImage;
+    nextBg.style.backgroundImage = 'none';
+    
+    // 少し遅延を入れてから再設定（ブラウザの再描画を促す）
+    setTimeout(() => {
+      nextBg.style.backgroundImage = currentBgUrl;
+    }, 10);
+  }
+  // ケース3: 緊急時（どちらも設定されていない場合）
+  else {
+    console.log(`ケース3: 緊急修正 - photos配列から直接URL取得`);
+    
+    // photos配列から直接URLを取得
+    const photoUrl = photos[photoIndex].url;
+    
+    // 一旦ローディング状態に
+    nextBg.classList.add('loading');
+    
+    // 画像読み込み
+    const fallbackImage = new Image();
+    fallbackImage.onload = () => {
+      nextBg.style.backgroundImage = `url(${photoUrl})`;
+      nextBg.dataset.backgroundImage = photoUrl; // 将来のために保存
+      
+      nextBg.classList.remove('loading');
+      nextBg.classList.add('fade-in');
+    };
+    fallbackImage.src = photoUrl;
   }
   
   // 次の背景をアクティブにする
   nextBg.classList.add('active');
   
   // 写真情報とキーワードを更新
-  updatePhotoInfo(photoIndex || currentBgIndex);
-  updateCurrentKeyword(photoIndex || currentBgIndex);
+  updatePhotoInfo(photoIndex);
+  updateCurrentKeyword(photoIndex);
   
-  // 次の次の画像（1つ先）をプリロード
+  // 次の画像をプリロード（常に1つ先だけ）
   const nextNextIndex = (currentBgIndex + 1) % backgrounds.length;
-  if (nextNextIndex !== currentBgIndex) { // 1枚しかない場合は処理しない
+  if (nextNextIndex !== currentBgIndex) {
     const nextNextBg = backgrounds[nextNextIndex];
-    if (nextNextBg && nextNextBg.dataset.backgroundImage) {
-      preloadImage(nextNextBg.dataset.backgroundImage);
+    if (nextNextBg && nextNextBg.dataset.backgroundImage && !nextNextBg.style.backgroundImage) {
+      // まだ読み込まれていない場合のみプリロード
+      const preloadImg = new Image();
+      preloadImg.src = nextNextBg.dataset.backgroundImage;
     }
   }
 }
