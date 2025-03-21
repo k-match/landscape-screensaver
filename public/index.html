@@ -1043,7 +1043,7 @@ function changeBackground() {
     console.log(`ケース1: 初回読み込み - dataset.backgroundImageから読み込み`);
     
     // 初期状態にローディングクラスを追加
-    nextBg.classList.add('loading');
+    // nextBg.classList.add('loading');
     
     // 非同期で画像を読み込む
     const nextImage = new Image();
@@ -1053,7 +1053,7 @@ function changeBackground() {
       // dataset.backgroundImageはクリアしない！
       
       // フェードイン効果を適用
-      nextBg.classList.remove('loading');
+    //   nextBg.classList.remove('loading');
       nextBg.classList.add('fade-in');
     };
     nextImage.src = nextBg.dataset.backgroundImage;
