@@ -1076,6 +1076,7 @@ function changeBackground() {
     // 少し遅延を入れてから再設定（ブラウザの再描画を促す）
     setTimeout(() => {
       nextBg.style.backgroundImage = currentBgUrl;
+      console.log(`画像を再設定: ${nextBg.style.backgroundImage}`);
     }, 10);
   }
   // ケース3: 緊急時（どちらも設定されていない場合）
