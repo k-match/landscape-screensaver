@@ -1101,6 +1101,7 @@ function changeBackground() {
   
   // 次の背景をアクティブにする
   nextBg.classList.add('active');
+  console.log(`次の背景をアクティブに: ${nextBg.dataset.backgroundImage}`);
   
   // 写真情報とキーワードを更新
   updatePhotoInfo(photoIndex);
@@ -1112,6 +1113,7 @@ function changeBackground() {
     const nextNextBg = backgrounds[nextNextIndex];
     if (nextNextBg && nextNextBg.dataset.backgroundImage && !nextNextBg.style.backgroundImage) {
       // まだ読み込まれていない場合のみプリロード
+      console.log(`次の次の画像をプリロード: ${nextNextBg.dataset.backgroundImage}`);
       const preloadImg = new Image();
       preloadImg.src = nextNextBg.dataset.backgroundImage;
     }
