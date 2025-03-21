@@ -1027,6 +1027,7 @@ function changeBackground() {
   console.log(`changeBackground: 現在=${currentBgIndex}, 総数=${backgrounds.length}`);
   
   // 現在の背景を非アクティブにする
+  backgrounds[currentBgIndex].classList.remove('fade-in');
   backgrounds[currentBgIndex].classList.remove('active');
   
   // 次の背景インデックスに進む
@@ -1056,7 +1057,6 @@ function changeBackground() {
       // フェードイン効果を適用
     //   nextBg.classList.remove('loading');
       nextBg.classList.add('fade-in');
-      nextBg.classList.add('active');
     };
     nextImage.src = nextBg.dataset.backgroundImage;
   } 
@@ -1078,7 +1078,6 @@ function changeBackground() {
     setTimeout(() => {
       nextBg.style.backgroundImage = currentBgUrl;
       console.log(`画像を再設定: ${nextBg.style.backgroundImage}`);
-      nextBg.classList.add('active');
     }, 10);
   }
   // ケース3: 緊急時（どちらも設定されていない場合）
@@ -1104,8 +1103,8 @@ function changeBackground() {
   }
   
   // 次の背景をアクティブにする
-//   nextBg.classList.add('active');
-//   console.log(`次の背景をアクティブに: ${nextBg.style.backgroundImage}`);
+  nextBg.classList.add('active');
+  console.log(`次の背景をアクティブに: ${nextBg.style.backgroundImage}`);
   
   // 写真情報とキーワードを更新
   updatePhotoInfo(photoIndex);
