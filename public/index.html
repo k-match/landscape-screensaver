@@ -936,11 +936,17 @@
             photoKeywords = Array(colors.length).fill('fallback');
         }
         
-        // 背景要素の初期化
-        function initializeBackgrounds() {
+// 背景要素の初期化（修正版）
+function initializeBackgrounds() {
+  // 既存の背景を全て削除
+  clearBackgrounds();
+  
   for (let i = 0; i < photos.length; i++) {
     const bg = document.createElement('div');
     bg.className = 'background';
+    
+    // 各背景要素に写真のインデックスを保存
+    bg.dataset.photoIndex = i;
     
     // 最初の画像の場合
     if (i === 0) {
@@ -952,12 +958,15 @@
       firstImage.onload = () => {
         // 画像が読み込まれたら背景に設定してフェードイン効果を開始
         bg.style.backgroundImage = `url(${photos[i].url})`;
+        // URL情報を保持しておく（2周目以降の保険）
+        bg.dataset.backgroundImage = photos[i].url;
+        
         bg.classList.remove('loading');
         bg.classList.add('fade-in');
         
-        // その後すぐに2枚目の画像も読み込み開始
-        if (photos.length > 1) {
-          preloadNextImage(1);
+        // その後すぐに2枚目以降の画像も読み込み開始
+        for (let j = 1; j < photos.length; j++) {
+          preloadNextImage(j);
         }
       };
       firstImage.src = photos[i].url;
@@ -965,7 +974,7 @@
       updatePhotoInfo(0);
       updateCurrentKeyword(0);
     } else {
-      // 最初の画像以外はデータ属性に URL を保存
+      // 他の画像はデータ属性に保存
       bg.dataset.backgroundImage = photos[i].url;
     }
     
@@ -978,12 +987,7 @@
     if (index < photos.length && backgrounds[index] && backgrounds[index].dataset.backgroundImage) {
       const nextImage = new Image();
       nextImage.onload = () => {
-        // 次の画像読み込み完了
         console.log(`Preloaded image ${index}`);
-        // 3枚目があればそれも事前読み込み開始
-        if (index === 1 && photos.length > 2) {
-          preloadNextImage(2);
-        }
       };
       nextImage.src = backgrounds[index].dataset.backgroundImage;
     }
@@ -1022,38 +1026,101 @@
             document.getElementById('date').textContent = dateString;
         }
 
-        // 背景画像の切り替え（レイジーローディング対応）
+// デバッグログを追加した changeBackground 関数
 function changeBackground() {
+  console.log(`-------------------------------------`);
+  console.log(`[デバッグ] 現在のサイクル情報：`);
+  console.log(`[デバッグ] 現在のインデックス: ${currentBgIndex}`);
+  console.log(`[デバッグ] 背景要素総数: ${backgrounds.length}`);
+  
+  // 1周目が終わるかどうかを検出
+  if (currentBgIndex === backgrounds.length - 1) {
+    console.log(`[デバッグ] ※※※ 1周目終了・2周目開始 ※※※`);
+  }
+  
+  // 現在の背景の状態をログ
+  const currentBg = backgrounds[currentBgIndex];
+  console.log(`[デバッグ] 現在の背景:`, {
+    index: currentBgIndex,
+    hasBackgroundImage: !!currentBg.style.backgroundImage,
+    backgroundImage: currentBg.style.backgroundImage,
+    hasDatasetBgImage: !!currentBg.dataset.backgroundImage,
+    datasetBgImage: currentBg.dataset.backgroundImage,
+    classList: Array.from(currentBg.classList)
+  });
+
   // 現在の背景を非アクティブにする
   backgrounds[currentBgIndex].classList.remove('active');
+  console.log(`[デバッグ] 'active'クラスを削除`);
   
   // 次の背景インデックスに進む
+  const prevIndex = currentBgIndex;
   currentBgIndex = (currentBgIndex + 1) % backgrounds.length;
+  console.log(`[デバッグ] 次の背景インデックス: ${currentBgIndex}`);
   
   // 次の背景要素
   const nextBg = backgrounds[currentBgIndex];
   
+  // 次の背景の状態をログ
+  console.log(`[デバッグ] 次の背景:`, {
+    index: currentBgIndex,
+    hasBackgroundImage: !!nextBg.style.backgroundImage,
+    backgroundImage: nextBg.style.backgroundImage,
+    hasDatasetBgImage: !!nextBg.dataset.backgroundImage,
+    datasetBgImage: nextBg.dataset.backgroundImage,
+    classList: Array.from(nextBg.classList)
+  });
+  
   // 画像がまだ読み込まれていない場合
   if (nextBg.dataset.backgroundImage) {
+    console.log(`[デバッグ] dataset.backgroundImageあり、画像読み込み開始`);
+    
     // 初期状態にローディングクラスを追加（黒背景から始まる）
     nextBg.classList.add('loading');
     
     // 非同期で画像を読み込む
     const nextImage = new Image();
     nextImage.onload = () => {
+      console.log(`[デバッグ] 画像の読み込み完了: インデックス=${currentBgIndex}`);
+      
       // 画像が読み込まれたら背景に設定
       nextBg.style.backgroundImage = `url(${nextBg.dataset.backgroundImage})`;
-      // この行を削除: nextBg.dataset.backgroundImage = '';
+      console.log(`[デバッグ] style.backgroundImage設定: ${nextBg.style.backgroundImage}`);
+      
+      // 以前の問題行 - 今回は削除
+      // nextBg.dataset.backgroundImage = '';
       
       // フェードイン効果を適用
       nextBg.classList.remove('loading');
       nextBg.classList.add('fade-in');
+      console.log(`[デバッグ] クラス更新: ${Array.from(nextBg.classList)}`);
     };
+    console.log(`[デバッグ] 画像読み込み開始: ${nextBg.dataset.backgroundImage}`);
     nextImage.src = nextBg.dataset.backgroundImage;
+  } else {
+    console.log(`[デバッグ] dataset.backgroundImageなし`);
+    console.log(`[デバッグ] style.backgroundImage: ${nextBg.style.backgroundImage}`);
+    console.log(`[デバッグ] 画像読み込みスキップ`);
+    
+    // 画像が既に読み込まれているかチェック
+    if (nextBg.style.backgroundImage) {
+      console.log(`[デバッグ] 既に style.backgroundImage が設定されています`);
+    } else {
+      console.log(`[デバッグ] ※※※ 警告: 画像URLがありません ※※※`);
+      
+      // 対応するphotosからURLを取得して設定
+      const photoUrl = photos[currentBgIndex].url;
+      console.log(`[デバッグ] photos配列から直接URL取得: ${photoUrl}`);
+      
+      // 緊急修正: 画像URLがない場合は photos 配列から直接設定
+      nextBg.style.backgroundImage = `url(${photoUrl})`;
+      console.log(`[デバッグ] photos配列からURLを直接設定`);
+    }
   }
   
   // 次の背景をアクティブにする
   nextBg.classList.add('active');
+  console.log(`[デバッグ] 'active'クラスを追加`);
   
   // 写真情報とキーワードを更新
   updatePhotoInfo(currentBgIndex);
@@ -1062,18 +1129,24 @@ function changeBackground() {
   // その次の背景も事前に読み込む
   const preloadIndex = (currentBgIndex + 1) % backgrounds.length;
   if (backgrounds[preloadIndex] && backgrounds[preloadIndex].dataset.backgroundImage) {
+    console.log(`[デバッグ] 次のインデックス ${preloadIndex} の画像を事前読み込み`);
     const preloadImg = new Image();
     preloadImg.src = backgrounds[preloadIndex].dataset.backgroundImage;
     
     // さらにその次の画像も事前読み込み
     const nextPreloadIndex = (preloadIndex + 1) % backgrounds.length;
     if (backgrounds[nextPreloadIndex] && backgrounds[nextPreloadIndex].dataset.backgroundImage) {
+      console.log(`[デバッグ] さらに次のインデックス ${nextPreloadIndex} の画像も事前読み込み予約`);
       setTimeout(() => {
         const nextPreloadImg = new Image();
         nextPreloadImg.src = backgrounds[nextPreloadIndex].dataset.backgroundImage;
       }, 2000); // 2秒後に読み込み開始（負荷を分散）
     }
+  } else {
+    console.log(`[デバッグ] 事前読み込みスキップ: preloadIndex=${preloadIndex}, URL=${backgrounds[preloadIndex]?.dataset.backgroundImage || 'なし'}`);
   }
+  
+  console.log(`[デバッグ] changeBackground 完了`);
 }
 
         // 写真情報の更新
