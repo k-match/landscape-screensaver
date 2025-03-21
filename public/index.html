@@ -98,16 +98,16 @@
         
         /* 画像が読み込まれたときのフェードイン効果 */
         .background.fade-in {
-            
+            animation: fadeInImage 1.5s ease-in-out forwards;
         }
-        /* 画像フェードインアニメーション */
-        @keyframes fadeInImage {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
+        /* 不透明度の制御は完全にactiveクラスに任せる */
+        .background.active {
+            opacity: 1;
         }
 
-        .active {
-            opacity: 1;
+        /* 非アクティブ時は明示的に透明に */
+        .background:not(.active) {
+        opacity: 0 !important; /* importantで他のスタイルより優先 */
         }
 
         .clock-container {
