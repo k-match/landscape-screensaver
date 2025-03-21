@@ -1050,6 +1050,7 @@ function changeBackground() {
     nextImage.onload = () => {
       // 画像が読み込まれたら背景に設定
       nextBg.style.backgroundImage = `url(${nextBg.dataset.backgroundImage})`;
+      console.log(`画像を設定: ${nextBg.style.backgroundImage}`);
       // dataset.backgroundImageはクリアしない！
       
       // フェードイン効果を適用
@@ -1101,7 +1102,7 @@ function changeBackground() {
   
   // 次の背景をアクティブにする
   nextBg.classList.add('active');
-  console.log(`次の背景をアクティブに: ${nextBg.dataset.backgroundImage}`);
+  console.log(`次の背景をアクティブに: ${nextBg.style.backgroundImage}`);
   
   // 写真情報とキーワードを更新
   updatePhotoInfo(photoIndex);
