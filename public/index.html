@@ -1023,7 +1023,6 @@
         }
 
         // 背景画像の切り替え（レイジーローディング対応）
-// 修正後のコード
 function changeBackground() {
   // 現在の背景を非アクティブにする
   backgrounds[currentBgIndex].classList.remove('active');
@@ -1034,9 +1033,9 @@ function changeBackground() {
   // 次の背景要素
   const nextBg = backgrounds[currentBgIndex];
   
-  // 背景画像のURLが保存されている場合は読み込む（1周目）
+  // 画像がまだ読み込まれていない場合
   if (nextBg.dataset.backgroundImage) {
-    // 初期状態にローディングクラスを追加
+    // 初期状態にローディングクラスを追加（黒背景から始まる）
     nextBg.classList.add('loading');
     
     // 非同期で画像を読み込む
@@ -1051,13 +1050,6 @@ function changeBackground() {
       nextBg.classList.add('fade-in');
     };
     nextImage.src = nextBg.dataset.backgroundImage;
-  } 
-  // すでに背景画像が設定されている場合（2周目以降）
-  else if (nextBg.style.backgroundImage) {
-    // 必要に応じてフェードイン効果を再適用
-    if (!nextBg.classList.contains('fade-in')) {
-      nextBg.classList.add('fade-in');
-    }
   }
   
   // 次の背景をアクティブにする
@@ -1067,7 +1059,7 @@ function changeBackground() {
   updatePhotoInfo(currentBgIndex);
   updateCurrentKeyword(currentBgIndex);
   
-  // その次の背景も事前に読み込む（修正なし）
+  // その次の背景も事前に読み込む
   const preloadIndex = (currentBgIndex + 1) % backgrounds.length;
   if (backgrounds[preloadIndex] && backgrounds[preloadIndex].dataset.backgroundImage) {
     const preloadImg = new Image();
