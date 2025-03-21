@@ -1058,6 +1058,13 @@ function changeBackground() {
     };
     nextImage.src = nextBg.dataset.backgroundImage;
   } 
+  else if (nextBg.style.backgroundImage) {
+    console.log(`画像はすでに読み込まれています`);
+    // 画像が読み込まれている場合はフェードイン効果のみ
+    if (!nextBg.classList.contains('fade-in')) {
+      nextBg.classList.add('fade-in');
+    }
+  }
   // スタイルが設定されていない＆データセットも空の場合（2周目以降で問題発生時）
   else if (!nextBg.style.backgroundImage) {
     console.log(`緊急修正: photos配列から直接URL取得`);
