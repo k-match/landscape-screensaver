@@ -451,17 +451,17 @@
         // 設定
         const KEYWORDS = ['landscape', 'mountains', 'ocean', 'forest', 'sunset', 'winter', 'summer', 'city', 'desert', 'beach', 'night'];
         const CACHE_KEY = 'unsplash_photos_cache';
-        // const CACHE_EXPIRY = 2 * 60 * 60 * 1000; // 2時間（ミリ秒）
-        const CACHE_EXPIRY = 30 * 1000; // デバッグ30秒（ミリ秒）
-        const CACHE_EXPIRY_CHECK = CACHE_EXPIRY + 2 * 1000; // キャッシュ期限+2秒
-        const PHOTOS_COUNT = 3; // 一度に取得する画像の数
+        const CACHE_EXPIRY = 1 * 60 * 60 * 1000; // 1時間（ミリ秒）
+        // const CACHE_EXPIRY = 30 * 1000; // デバッグ30秒（ミリ秒）
+        const CACHE_EXPIRY_CHECK = 10 * 60 * 1000; // 10分
+        const PHOTOS_COUNT = 30; // 一度に取得する画像の数
 
         // Pages Functions API エンドポイント（相対パス）
         const API_ENDPOINT = '/api/unsplash';
 
         // キャッシュの有効期限を確認し、期限切れなら自動的に画像を再取得する関数
         function startCacheExpiryChecker() {
-            // 30秒ごとにキャッシュの有効期限をチェック
+            // CACHE_EXPIRY_CHECK秒ごとにキャッシュの有効期限をチェック
             setInterval(() => {
                 // キャッシュが存在する場合のみチェック
                 const cachedData = localStorage.getItem(CACHE_KEY);
