@@ -968,6 +968,7 @@
                 
                 // 最初の画像の場合
                 if (i === 0) {
+                    const firstImageUrl = photos[i].url;
                     
                     // 画像を非同期で読み込む
                     const firstImage = new Image();
@@ -976,9 +977,9 @@
                         bg.classList.add('active');
 
                         // 画像が読み込まれたら背景に設定してフェードイン効果を開始
-                        bg.style.backgroundImage = `url(${photos[i].url})`;
+                        bg.style.backgroundImage = `url(${firstImageUrl})`;
                         // URL情報を保持しておく（2周目以降の保険）
-                        bg.dataset.backgroundImage = photos[i].url;
+                        bg.dataset.backgroundImage = firstImageUrl;
                         
                         // bg.classList.remove('loading');
                         // bg.classList.add('fade-in');
