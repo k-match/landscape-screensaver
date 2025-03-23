@@ -459,7 +459,6 @@
         const CACHE_EXPIRY = 30 * 1000; // デバッグ30秒（ミリ秒）
         const PHOTOS_COUNT = 3; // 一度に取得する画像の数
 
-
         // Pages Functions API エンドポイント（相対パス）
         const API_ENDPOINT = '/api/unsplash';
         
@@ -536,13 +535,11 @@
             
             // ネットワーク状態の監視
             window.addEventListener('online', () => {
-                console.log('Online status detected');
                 isOffline = false;
                 updateOfflineStatus();
             });
 
             window.addEventListener('offline', () => {
-                console.log('Offline status detected');
                 isOffline = true;
                 updateOfflineStatus();
             });
@@ -583,43 +580,43 @@
         
         // キーワード選択パネルの初期化
         function initializeKeywordSelector() {
-    const keywordSelector = document.getElementById('keyword-selector');
-    
-    // 既存の内容をクリア
-    keywordSelector.innerHTML = '';
-    
-    // KEYWORDS配列から選択チップを生成
-    KEYWORDS.forEach(keyword => {
-        const chip = document.createElement('div');
-        chip.className = 'keyword-chip';
-        if (keyword === selectedKeyword) {
-            chip.classList.add('active');
+            const keywordSelector = document.getElementById('keyword-selector');
+            
+            // 既存の内容をクリア
+            keywordSelector.innerHTML = '';
+            
+            // KEYWORDS配列から選択チップを生成
+            KEYWORDS.forEach(keyword => {
+                const chip = document.createElement('div');
+                chip.className = 'keyword-chip';
+                if (keyword === selectedKeyword) {
+                    chip.classList.add('active');
+                }
+                chip.dataset.keyword = keyword;
+                
+                // 英語のキーワードを表示
+                chip.innerHTML = `
+                    <span>${keyword}</span>
+                `;
+                
+                // クリックイベント
+                chip.addEventListener('click', () => {
+                    selectKeyword(keyword);
+                });
+                
+                keywordSelector.appendChild(chip);
+            });
+            
+            // 現在選択されているキーワードのタグも更新
+            updateCurrentKeywordTag(selectedKeyword);
         }
-        chip.dataset.keyword = keyword;
-        
-        // 英語のキーワードを表示
-        chip.innerHTML = `
-            <span>${keyword}</span>
-        `;
-        
-        // クリックイベント
-        chip.addEventListener('click', () => {
-            selectKeyword(keyword);
-        });
-        
-        keywordSelector.appendChild(chip);
-    });
-    
-    // 現在選択されているキーワードのタグも更新
-    updateCurrentKeywordTag(selectedKeyword);
-}
 
         // 現在のキーワードタグを更新
         function updateCurrentKeywordTag(keyword) {
             const keywordTag = document.getElementById('current-keyword-tag');
-    
+            
             keywordTag.innerHTML = `
-            <span class="keyword-tag-text">${keyword}</span>
+                <span class="keyword-tag-text">${keyword}</span>
             `;
         }
 
@@ -914,7 +911,6 @@
 
         // フォールバック画像（エラー時）
         function useFallbackImages() {
-            console.log('Using fallback images');
             const colors = ['#1a365d', '#2a4365', '#2c5282', '#2b6cb0', '#3182ce'];
             photos = colors.map((color, index) => ({
                 id: `fallback-${index}`,
@@ -931,59 +927,58 @@
             photoKeywords = Array(colors.length).fill('fallback');
         }
         
-// 背景要素の初期化（最適化版）
-function initializeBackgrounds() {
-  // 既存の背景を全て削除
-  clearBackgrounds();
-  
-  for (let i = 0; i < photos.length; i++) {
-    const bg = document.createElement('div');
-    bg.className = 'background';
-    
-    // 各背景要素に写真のインデックスを保存
-    bg.dataset.photoIndex = i;
-    
-    // 最初の画像の場合
-    if (i === 0) {
-      // 最初は黒背景で表示してローディング状態を追加
-      bg.classList.add('loading', 'active');
-      
-      // 画像を非同期で読み込む
-      const firstImage = new Image();
-      firstImage.onload = () => {
-        // 画像が読み込まれたら背景に設定してフェードイン効果を開始
-        bg.style.backgroundImage = `url(${photos[i].url})`;
-        // URL情報を保持しておく（2周目以降の保険）
-        bg.dataset.backgroundImage = photos[i].url;
-        
-        bg.classList.remove('loading');
-        bg.classList.add('fade-in');
-        
-        // 次の画像（2枚目）のみプリロード
-        if (photos.length > 1) {
-          preloadImage(photos[1].url);
+        // 背景要素の初期化（最適化版）
+        function initializeBackgrounds() {
+            // 既存の背景を全て削除
+            clearBackgrounds();
+            
+            for (let i = 0; i < photos.length; i++) {
+                const bg = document.createElement('div');
+                bg.className = 'background';
+                
+                // 各背景要素に写真のインデックスを保存
+                bg.dataset.photoIndex = i;
+                
+                // 最初の画像の場合
+                if (i === 0) {
+                    // 最初は黒背景で表示してローディング状態を追加
+                    bg.classList.add('loading', 'active');
+                    
+                    // 画像を非同期で読み込む
+                    const firstImage = new Image();
+                    firstImage.onload = () => {
+                        // 画像が読み込まれたら背景に設定してフェードイン効果を開始
+                        bg.style.backgroundImage = `url(${photos[i].url})`;
+                        // URL情報を保持しておく（2周目以降の保険）
+                        bg.dataset.backgroundImage = photos[i].url;
+                        
+                        bg.classList.remove('loading');
+                        bg.classList.add('fade-in');
+                        
+                        // 次の画像（2枚目）のみプリロード
+                        if (photos.length > 1) {
+                            preloadImage(photos[1].url);
+                        }
+                    };
+                    firstImage.src = photos[i].url;
+                    
+                    updatePhotoInfo(0);
+                    updateCurrentKeyword(0);
+                } else {
+                    // 他の画像はデータ属性に保存
+                    bg.dataset.backgroundImage = photos[i].url;
+                }
+                
+                document.body.appendChild(bg);
+                backgrounds.push(bg);
+            }
         }
-      };
-      firstImage.src = photos[i].url;
-      
-      updatePhotoInfo(0);
-      updateCurrentKeyword(0);
-    } else {
-      // 他の画像はデータ属性に保存
-      bg.dataset.backgroundImage = photos[i].url;
-    }
-    
-    document.body.appendChild(bg);
-    backgrounds.push(bg);
-  }
-}
 
-// 画像をプリロードするシンプルな関数
-function preloadImage(url) {
-    console.log(`画像をプリロード: ${url}`);
-  const img = new Image();
-  img.src = url;
-}
+        // 画像をプリロードするシンプルな関数
+        function preloadImage(url) {
+            const img = new Image();
+            img.src = url;
+        }
         
         // 背景をクリア
         function clearBackgrounds() {
@@ -1017,106 +1012,86 @@ function preloadImage(url) {
             document.getElementById('date').textContent = dateString;
         }
 
-// 背景画像の切り替え（完全修正版）
-function changeBackground() {
-  console.log(`changeBackground: 現在=${currentBgIndex}, 総数=${backgrounds.length}`);
-  
-  // 現在の背景を非アクティブにする
-  backgrounds[currentBgIndex].classList.remove('fade-in');
-  backgrounds[currentBgIndex].classList.remove('active');
-  
-  // 次の背景インデックスに進む
-  currentBgIndex = (currentBgIndex + 1) % backgrounds.length;
-  
-  // 次の背景要素
-  const nextBg = backgrounds[currentBgIndex];
-  const photoIndex = parseInt(nextBg.dataset.photoIndex || currentBgIndex);
-  
-  console.log(`次の背景: index=${currentBgIndex}, photoIndex=${photoIndex}, hasDatasetBg=${!!nextBg.dataset.backgroundImage}, hasStyleBg=${!!nextBg.style.backgroundImage}`);
-  
-  // ケース1: 画像がまだ読み込まれていない場合（dataset.backgroundImageあり、style.backgroundImageなし）
-  if (nextBg.dataset.backgroundImage && !nextBg.style.backgroundImage) {
-    console.log(`ケース1: 初回読み込み - dataset.backgroundImageから読み込み`);
-    
-    // 初期状態にローディングクラスを追加
-    // nextBg.classList.add('loading');
-    
-    // 非同期で画像を読み込む
-    const nextImage = new Image();
-    nextImage.onload = () => {
-      // 画像が読み込まれたら背景に設定
-      nextBg.style.backgroundImage = `url(${nextBg.dataset.backgroundImage})`;
-      console.log(`画像を設定: ${nextBg.style.backgroundImage}`);
-      // dataset.backgroundImageはクリアしない！
-      
-      // フェードイン効果を適用
-    //   nextBg.classList.remove('loading');
-      nextBg.classList.add('fade-in');
-    };
-    nextImage.src = nextBg.dataset.backgroundImage;
-  } 
-  // ケース2: 画像が既に読み込まれている場合（style.backgroundImageあり）
-  else if (nextBg.style.backgroundImage) {
-    console.log(`ケース2: 既に画像読み込み済み - style.backgroundImageを使用`);
-    
-    // 必要に応じてフェードイン効果を再適用
-    if (!nextBg.classList.contains('fade-in')) {
-      nextBg.classList.add('fade-in');
-    }
-    
-    // すでに読み込まれている画像を再表示するためのトリガー
-    // 同じURLでも再度設定することで表示を確実にする
-    const currentBgUrl = nextBg.style.backgroundImage;
-    nextBg.style.backgroundImage = 'none';
-    
-    // 少し遅延を入れてから再設定（ブラウザの再描画を促す）
-    setTimeout(() => {
-      nextBg.style.backgroundImage = currentBgUrl;
-      console.log(`画像を再設定: ${nextBg.style.backgroundImage}`);
-    }, 10);
-  }
-  // ケース3: 緊急時（どちらも設定されていない場合）
-  else {
-    console.log(`ケース3: 緊急修正 - photos配列から直接URL取得`);
-    
-    // photos配列から直接URLを取得
-    const photoUrl = photos[photoIndex].url;
-    
-    // 一旦ローディング状態に
-    nextBg.classList.add('loading');
-    
-    // 画像読み込み
-    const fallbackImage = new Image();
-    fallbackImage.onload = () => {
-      nextBg.style.backgroundImage = `url(${photoUrl})`;
-      nextBg.dataset.backgroundImage = photoUrl; // 将来のために保存
-      
-      nextBg.classList.remove('loading');
-      nextBg.classList.add('fade-in');
-    };
-    fallbackImage.src = photoUrl;
-  }
-  
-  // 次の背景をアクティブにする
-  nextBg.classList.add('active');
-  console.log(`次の背景をアクティブに: ${nextBg.style.backgroundImage}`);
-  
-  // 写真情報とキーワードを更新
-  updatePhotoInfo(photoIndex);
-  updateCurrentKeyword(photoIndex);
-  
-  // 次の画像をプリロード（常に1つ先だけ）
-  const nextNextIndex = (currentBgIndex + 1) % backgrounds.length;
-  if (nextNextIndex !== currentBgIndex) {
-    const nextNextBg = backgrounds[nextNextIndex];
-    if (nextNextBg && nextNextBg.dataset.backgroundImage && !nextNextBg.style.backgroundImage) {
-      // まだ読み込まれていない場合のみプリロード
-      console.log(`次の次の画像をプリロード: ${nextNextBg.dataset.backgroundImage}`);
-      const preloadImg = new Image();
-      preloadImg.src = nextNextBg.dataset.backgroundImage;
-    }
-  }
-}
+        // 背景画像の切り替え（完全修正版）
+        function changeBackground() {
+            // 現在の背景を非アクティブにする
+            backgrounds[currentBgIndex].classList.remove('fade-in');
+            backgrounds[currentBgIndex].classList.remove('active');
+            
+            // 次の背景インデックスに進む
+            currentBgIndex = (currentBgIndex + 1) % backgrounds.length;
+            
+            // 次の背景要素
+            const nextBg = backgrounds[currentBgIndex];
+            const photoIndex = parseInt(nextBg.dataset.photoIndex || currentBgIndex);
+            
+            // ケース1: 画像がまだ読み込まれていない場合（dataset.backgroundImageあり、style.backgroundImageなし）
+            if (nextBg.dataset.backgroundImage && !nextBg.style.backgroundImage) {
+                // 非同期で画像を読み込む
+                const nextImage = new Image();
+                nextImage.onload = () => {
+                    // 画像が読み込まれたら背景に設定
+                    nextBg.style.backgroundImage = `url(${nextBg.dataset.backgroundImage})`;
+                    // フェードイン効果を適用
+                    nextBg.classList.add('fade-in');
+                };
+                nextImage.src = nextBg.dataset.backgroundImage;
+            } 
+            // ケース2: 画像が既に読み込まれている場合（style.backgroundImageあり）
+            else if (nextBg.style.backgroundImage) {
+                // 必要に応じてフェードイン効果を再適用
+                if (!nextBg.classList.contains('fade-in')) {
+                    nextBg.classList.add('fade-in');
+                }
+                
+                // すでに読み込まれている画像を再表示するためのトリガー
+                // 同じURLでも再度設定することで表示を確実にする
+                const currentBgUrl = nextBg.style.backgroundImage;
+                nextBg.style.backgroundImage = 'none';
+                
+                // 少し遅延を入れてから再設定（ブラウザの再描画を促す）
+                setTimeout(() => {
+                    nextBg.style.backgroundImage = currentBgUrl;
+                }, 10);
+            }
+            // ケース3: 緊急時（どちらも設定されていない場合）
+            else {
+                // photos配列から直接URLを取得
+                const photoUrl = photos[photoIndex].url;
+                
+                // 一旦ローディング状態に
+                nextBg.classList.add('loading');
+                
+                // 画像読み込み
+                const fallbackImage = new Image();
+                fallbackImage.onload = () => {
+                    nextBg.style.backgroundImage = `url(${photoUrl})`;
+                    nextBg.dataset.backgroundImage = photoUrl; // 将来のために保存
+                    
+                    nextBg.classList.remove('loading');
+                    nextBg.classList.add('fade-in');
+                };
+                fallbackImage.src = photoUrl;
+            }
+            
+            // 次の背景をアクティブにする
+            nextBg.classList.add('active');
+            
+            // 写真情報とキーワードを更新
+            updatePhotoInfo(photoIndex);
+            updateCurrentKeyword(photoIndex);
+            
+            // 次の画像をプリロード（常に1つ先だけ）
+            const nextNextIndex = (currentBgIndex + 1) % backgrounds.length;
+            if (nextNextIndex !== currentBgIndex) {
+                const nextNextBg = backgrounds[nextNextIndex];
+                if (nextNextBg && nextNextBg.dataset.backgroundImage && !nextNextBg.style.backgroundImage) {
+                    // まだ読み込まれていない場合のみプリロード
+                    const preloadImg = new Image();
+                    preloadImg.src = nextNextBg.dataset.backgroundImage;
+                }
+            }
+        }
 
         // 写真情報の更新
         function updatePhotoInfo(index) {
@@ -1198,16 +1173,13 @@ function changeBackground() {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js', { scope: '/' })
                     .then(registration => {
-                        console.log('ServiceWorker registered successfully:', registration);
-                    })
-                    .catch(error => {
                         console.error('ServiceWorker registration failed:', error);
                     });
             });
             
             // インストールイベントを検知
             window.addEventListener('beforeinstallprompt', (e) => {
-                console.log('Install prompt detected');
+                // Install prompt detected
             });
         }
 
@@ -1215,7 +1187,7 @@ function changeBackground() {
         function keepAwake() {
             if (navigator.wakeLock) {
                 navigator.wakeLock.request('screen').then(lock => {
-                    console.log('Screen wake lock active');
+                    // Screen wake lock active
                 }).catch(err => {
                     console.error(`Screen wake lock error: ${err.name}, ${err.message}`);
                 });
