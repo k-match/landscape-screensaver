@@ -1122,33 +1122,58 @@
             }
         }
 
-        // 写真情報の更新
+        // 写真情報を更新
         function updatePhotoInfo(index) {
             const photoInfoElement = document.getElementById('photo-info');
             const photo = photos[index];
             
+            // 既存のコンテンツをクリア
+            photoInfoElement.textContent = '';
+            
             if (photo && photo.photographer) {
-                let infoHTML = `
-                    <div class="photo-credit">
-                        Photo by <a href="${photo.photographer.profile}" target="_blank" rel="noopener">${photo.photographer.name}</a> on 
-                        <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a>
-                    </div>
-                `;
+                // 写真クレジット部分
+                const creditDiv = document.createElement('div');
+                creditDiv.className = 'photo-credit';
                 
+                const textNode = document.createTextNode('Photo by ');
+                creditDiv.appendChild(textNode);
+                
+                const photographerLink = document.createElement('a');
+                photographerLink.href = photo.photographer.profile;
+                photographerLink.target = '_blank';
+                photographerLink.rel = 'noopener';
+                photographerLink.textContent = photo.photographer.name;
+                creditDiv.appendChild(photographerLink);
+                
+                creditDiv.appendChild(document.createTextNode(' on '));
+                
+                const unsplashLink = document.createElement('a');
+                unsplashLink.href = 'https://unsplash.com';
+                unsplashLink.target = '_blank';
+                unsplashLink.rel = 'noopener';
+                unsplashLink.textContent = 'Unsplash';
+                creditDiv.appendChild(unsplashLink);
+                
+                photoInfoElement.appendChild(creditDiv);
+                
+                // 撮影場所（存在する場合）
                 if (photo.location) {
-                    infoHTML += `<div class="photo-location">${photo.location}</div>`;
+                    const locationDiv = document.createElement('div');
+                    locationDiv.className = 'photo-location';
+                    locationDiv.textContent = photo.location;
+                    photoInfoElement.appendChild(locationDiv);
                 }
                 
+                // 写真の説明（存在する場合）
                 if (photo.description) {
-                    infoHTML += `<div class="photo-description">${photo.description}</div>`;
+                    const descriptionDiv = document.createElement('div');
+                    descriptionDiv.className = 'photo-description';
+                    descriptionDiv.textContent = photo.description;
+                    photoInfoElement.appendChild(descriptionDiv);
                 }
-                
-                photoInfoElement.innerHTML = infoHTML;
-            } else {
-                photoInfoElement.innerHTML = '';
             }
         }
-        
+
         // ローディングインジケータ
         function showLoadingIndicator() {
             document.getElementById('loading').style.display = 'flex';

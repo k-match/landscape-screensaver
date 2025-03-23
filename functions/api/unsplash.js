@@ -84,8 +84,19 @@ export async function onRequest(context) {
           return `${photo.urls.raw}&w=${screenWidth}&fit=max&_=${timestamp}`;
         }
       };
+
+      // HTMLエスケープ関数（サーバーサイド用）
+      function escapeHTML(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+      }
       
-      // 必要なデータだけを抽出
+      // プロセスされたデータでエスケープを適用
       const processedData = data.map(photo => ({
         id: photo.id,
         url: getOptimalImageUrl(photo, width, height),
@@ -93,12 +104,12 @@ export async function onRequest(context) {
         width: photo.width,
         height: photo.height,
         color: photo.color,
-        description: photo.description || photo.alt_description,
-        location: photo.location?.name,
+        description: escapeHTML(photo.description || photo.alt_description),
+        location: escapeHTML(photo.location?.name),
         photographer: {
-          name: photo.user.name,
-          username: photo.user.username,
-          profile: photo.user.links.html
+            name: escapeHTML(photo.user.name),
+            username: escapeHTML(photo.user.username),
+            profile: photo.user.links.html // URLはエスケープしない
         }
       }));
       
