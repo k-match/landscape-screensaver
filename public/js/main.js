@@ -402,6 +402,44 @@
                 // APIリクエスト（サイズ情報とキャッシュバスティングパラメータを追加）
                 const response = await fetch(`${API_ENDPOINT}?query=${query}&count=${PHOTOS_COUNT}&width=${screenWidth}&height=${screenHeight}&_=${timestamp}`);
                 
+                // レート制限の処理（新しく追加）
+                if (response.status === 429) {
+                    // レート制限エラーを特別に処理
+                    const errorData = await response.json();
+                    
+                    // ユーザーにレート制限を通知
+                    const retryAfter = parseInt(response.headers.get('Retry-After') || errorData.retry_after || '60', 10);
+                    
+                    // 残りの制限時間を計算（秒）
+                    const remainingTime = Math.ceil(retryAfter / 60);
+                    
+                    // ユーザーに通知
+                    console.warn(`APIリクエスト制限に達しました。約${remainingTime}分後に再試行してください。`);
+                    
+                    // オフライン通知を表示
+                    const offlineNotice = document.getElementById('offline-notice');
+                    if (offlineNotice) {
+                        offlineNotice.textContent = `APIリクエスト制限に達しました。約${remainingTime}分後に再試行してください。`;
+                        offlineNotice.style.display = 'block';
+                        
+                        // 5秒後に通知を非表示
+                        setTimeout(() => {
+                            offlineNotice.style.display = 'none';
+                        }, 5000);
+                    }
+                    
+                    // キャッシュされた画像があればそれを使用する
+                    const cachedData = checkPhotoCache();
+                    if (cachedData) {
+                        isUnsplashFetchInProgress = false;
+                        return cachedData;
+                    }
+                    
+                    // 最後の手段としてフォールバック画像を使用
+                    isUnsplashFetchInProgress = false;
+                    throw new Error('Rate limit exceeded');
+                }
+                
                 if (!response.ok) {
                     throw new Error(`API responded with ${response.status}: ${response.statusText}`);
                 }
@@ -416,6 +454,12 @@
             } catch (error) {
                 console.error('Failed to fetch from Unsplash API:', error);
                 isUnsplashFetchInProgress = false;
+                
+                // エラーがレート制限の場合はフォールバック画像を使用
+                if (error.message === 'Rate limit exceeded') {
+                    return useFallbackImages();
+                }
+                
                 throw error;
             }
         }
