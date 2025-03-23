@@ -943,12 +943,12 @@
                 
                 // 最初の画像の場合
                 if (i === 0) {
-                    bg.classList.add('active');
                     
                     // 画像を非同期で読み込む
                     const firstImage = new Image();
                     firstImage.onload = () => {
                         bg_1st_loading.classList.remove('active');
+                        bg.classList.add('active');
 
                         // 画像が読み込まれたら背景に設定してフェードイン効果を開始
                         bg.style.backgroundImage = `url(${photos[i].url})`;
