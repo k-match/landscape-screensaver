@@ -86,6 +86,8 @@
         /* 画像読み込み前の初期状態 */
         .background.loading {
             animation: backgroundTransition 6s ease-in-out infinite;
+            opacity: 1; /* ローディング中は不透明度を1に固定 */
+            transition: none; /* アニメーション中はトランジションを無効化 */
         }
 
         /* ローディング中の背景トランジションアニメーション */
@@ -97,11 +99,29 @@
         }
         
         /* 画像が読み込まれたときのフェードイン効果 */
-        .background.fade-in {
-            animation: fadeInImage 1.5s ease-in-out forwards;
+        @keyframes fadeInImage {
+            0% {
+                background-color: #1a365d;
+                opacity: 1;
+            }
+            100% {
+                background-color: transparent;
+                opacity: 1;
+            }
         }
+
+        .background.fade-in {
+            animation: fadeInImage 2s ease-in-out forwards;
+            transition: none; /* トランジションとアニメーションが競合しないようにする */
+        }
+        
         /* 不透明度の制御は完全にactiveクラスに任せる */
         .background.active {
+            opacity: 1;
+        }
+
+        /* .active と .loading を両方持つ場合の調整 */
+        .background.active.loading {
             opacity: 1;
         }
 
@@ -941,26 +961,41 @@
                 
                 // 最初の画像の場合
                 if (i === 0) {
-                    // 最初は黒背景で表示してローディング状態を追加
-                    bg.classList.add('loading', 'active');
+                    // まずローディング状態を追加（アクティブクラスはまだ追加しない）
+                    bg.classList.add('loading');
                     
-                    // 画像を非同期で読み込む
-                    const firstImage = new Image();
-                    firstImage.onload = () => {
-                        // 画像が読み込まれたら背景に設定してフェードイン効果を開始
-                        bg.style.backgroundImage = `url(${photos[i].url})`;
-                        // URL情報を保持しておく（2周目以降の保険）
-                        bg.dataset.backgroundImage = photos[i].url;
+                    // DOM更新を確実に行うための短い遅延
+                    setTimeout(() => {
+                        // アクティブクラスを追加（これでローディングアニメーションが表示される）
+                        bg.classList.add('active');
                         
-                        bg.classList.remove('loading');
-                        bg.classList.add('fade-in');
+                        // 画像を非同期で読み込む
+                        const firstImage = new Image();
                         
-                        // 次の画像（2枚目）のみプリロード
-                        if (photos.length > 1) {
-                            preloadImage(photos[1].url);
-                        }
-                    };
-                    firstImage.src = photos[i].url;
+                        firstImage.onload = () => {
+                            // 画像が読み込まれたらDOMを更新する前にクラス変更を準備
+                            // ここでは実際のDOM操作は行わない
+                            
+                            // 画像を設定
+                            bg.style.backgroundImage = `url(${photos[i].url})`;
+                            bg.dataset.backgroundImage = photos[i].url;
+                            
+                            // クラスの変更をアニメーションフレームの中で実行
+                            // これによりブラウザのレンダリングサイクルでスムーズに処理される
+                            requestAnimationFrame(() => {
+                                // アニメーション開始のためのクラス変更
+                                bg.classList.remove('loading');
+                                bg.classList.add('fade-in');
+                            });
+                            
+                            // 次の画像（2枚目）のみプリロード
+                            if (photos.length > 1) {
+                                preloadImage(photos[1].url);
+                            }
+                        };
+                        
+                        firstImage.src = photos[i].url;
+                    }, 10);
                     
                     updatePhotoInfo(0);
                     updateCurrentKeyword(0);
@@ -1173,6 +1208,9 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js', { scope: '/' })
                     .then(registration => {
+                        console.log('ServiceWorker registration successful:', registration);
+                    })
+                    .catch(error => {
                         console.error('ServiceWorker registration failed:', error);
                     });
             });
