@@ -96,10 +96,6 @@
             100% { background-color: #000; }
         }
         
-        /* 画像が読み込まれたときのフェードイン効果 */
-        .background.fade-in {
-            animation: fadeInImage 1.5s ease-in-out forwards;
-        }
         /* 不透明度の制御は完全にactiveクラスに任せる */
         .background.active {
             opacity: 1;
@@ -953,7 +949,7 @@
                         bg.dataset.backgroundImage = photos[i].url;
                         
                         bg.classList.remove('loading');
-                        bg.classList.add('fade-in');
+                        // bg.classList.add('fade-in');
                         
                         // 次の画像（2枚目）のみプリロード
                         if (photos.length > 1) {
@@ -1015,7 +1011,7 @@
         // 背景画像の切り替え（完全修正版）
         function changeBackground() {
             // 現在の背景を非アクティブにする
-            backgrounds[currentBgIndex].classList.remove('fade-in');
+            // backgrounds[currentBgIndex].classList.remove('fade-in');
             backgrounds[currentBgIndex].classList.remove('active');
             
             // 次の背景インデックスに進む
@@ -1033,16 +1029,16 @@
                     // 画像が読み込まれたら背景に設定
                     nextBg.style.backgroundImage = `url(${nextBg.dataset.backgroundImage})`;
                     // フェードイン効果を適用
-                    nextBg.classList.add('fade-in');
+                    // nextBg.classList.add('fade-in');
                 };
                 nextImage.src = nextBg.dataset.backgroundImage;
             } 
             // ケース2: 画像が既に読み込まれている場合（style.backgroundImageあり）
             else if (nextBg.style.backgroundImage) {
                 // 必要に応じてフェードイン効果を再適用
-                if (!nextBg.classList.contains('fade-in')) {
-                    nextBg.classList.add('fade-in');
-                }
+                // if (!nextBg.classList.contains('fade-in')) {
+                //     nextBg.classList.add('fade-in');
+                // }
                 
                 // すでに読み込まれている画像を再表示するためのトリガー
                 // 同じURLでも再度設定することで表示を確実にする
@@ -1069,7 +1065,7 @@
                     nextBg.dataset.backgroundImage = photoUrl; // 将来のために保存
                     
                     nextBg.classList.remove('loading');
-                    nextBg.classList.add('fade-in');
+                    // nextBg.classList.add('fade-in');
                 };
                 fallbackImage.src = photoUrl;
             }
