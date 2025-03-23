@@ -951,6 +951,14 @@
                         
                         bg.classList.remove('loading');
                         // bg.classList.add('fade-in');
+
+                        // 一瞬deactiveateしてからactiveにすることでフェードイン効果を再生
+                        setTimeout(() => {
+                            bg.classList.remove('active');
+                            setTimeout(() => {
+                                bg.classList.add('active');
+                            }, 10);
+                        }, 10);
                         
                         // 次の画像（2枚目）のみプリロード
                         if (photos.length > 1) {
