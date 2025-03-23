@@ -1,4 +1,8 @@
-# ビルド出力ディレクトリの設定（必須）
+# プロジェクト名
+name = "landscape-screensaver"
+
+# 静的ファイル配置ディレクトリ
 pages_build_output_dir = "public"
 
+# 互換性日付（必須）
 compatibility_date = "2025-03-23"
