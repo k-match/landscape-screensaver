@@ -105,6 +105,43 @@
             opacity: 1;
         }
 
+        /* 画像が読み込まれたときのフェードイン効果を正しく定義 */
+        @keyframes fadeInImage {
+            0% { 
+                opacity: 0; 
+                background-color: #1a365d; 
+            }
+            25% { 
+                opacity: 0.3; 
+                background-color: rgba(26, 54, 93, 0.7);
+            }
+            100% { 
+                opacity: 1; 
+                background-color: transparent;
+            }
+        }
+
+        /* トランジション用に特別なクラスを追加 */
+        .background.transitioning {
+            animation: fadeInImage 2.5s ease-in-out forwards;
+        }
+
+        /* 背景の基本トランジションを強化 */
+        .background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 2s ease-in-out, background-color 2s ease-in-out;
+            z-index: 1;
+            /* 初期状態では背景色を黒に設定 */
+            background-color: #000;
+        }
+
         .clock-container {
             position: absolute;
             top: 50%;
@@ -947,18 +984,27 @@
                     // 画像を非同期で読み込む
                     const firstImage = new Image();
                     firstImage.onload = () => {
-                        // 画像が読み込まれたら背景に設定してフェードイン効果を開始
+                        // ローディング状態を維持したまま背景画像を設定
                         bg.style.backgroundImage = `url(${photos[i].url})`;
                         // URL情報を保持しておく（2周目以降の保険）
                         bg.dataset.backgroundImage = photos[i].url;
                         
-                        bg.classList.remove('loading');
-                        bg.classList.add('fade-in');
-                        
-                        // 次の画像（2枚目）のみプリロード
-                        if (photos.length > 1) {
-                            preloadImage(photos[1].url);
-                        }
+                        // 少し遅延を入れてからトランジションを開始
+                        setTimeout(() => {
+                            // トランジション用クラスを追加
+                            bg.classList.add('transitioning');
+                            
+                            // クラスの切り替えを遅延させることでスムーズさを向上
+                            setTimeout(() => {
+                                bg.classList.remove('loading');
+                                // fade-inクラスは必要なくなったので追加しない
+                                
+                                // 次の画像（2枚目）のみプリロード
+                                if (photos.length > 1) {
+                                    preloadImage(photos[1].url);
+                                }
+                            }, 300); // 少し遅延を入れることでトランジションの開始タイミングを調整
+                        }, 100);
                     };
                     firstImage.src = photos[i].url;
                     
@@ -973,6 +1019,7 @@
                 backgrounds.push(bg);
             }
         }
+
 
         // 画像をプリロードするシンプルな関数
         function preloadImage(url) {
