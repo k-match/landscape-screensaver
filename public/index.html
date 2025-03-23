@@ -952,8 +952,9 @@
                         // URL情報を保持しておく（2周目以降の保険）
                         bg.dataset.backgroundImage = photos[i].url;
                         
-                        bg.classList.remove('loading');
                         bg.classList.add('fade-in');
+                        bg.classList.remove('loading');
+                        
                         
                         // 次の画像（2枚目）のみプリロード
                         if (photos.length > 1) {
