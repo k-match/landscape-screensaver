@@ -453,10 +453,34 @@
         const CACHE_KEY = 'unsplash_photos_cache';
         // const CACHE_EXPIRY = 2 * 60 * 60 * 1000; // 2時間（ミリ秒）
         const CACHE_EXPIRY = 30 * 1000; // デバッグ30秒（ミリ秒）
+        const CACHE_EXPIRY_CHECK = CACHE_EXPIRY + 2 * 1000; // キャッシュ期限+2秒
         const PHOTOS_COUNT = 3; // 一度に取得する画像の数
 
         // Pages Functions API エンドポイント（相対パス）
         const API_ENDPOINT = '/api/unsplash';
+
+        // キャッシュの有効期限を確認し、期限切れなら自動的に画像を再取得する関数
+        function startCacheExpiryChecker() {
+            // 30秒ごとにキャッシュの有効期限をチェック
+            setInterval(() => {
+                // キャッシュが存在する場合のみチェック
+                const cachedData = localStorage.getItem(CACHE_KEY);
+                if (cachedData) {
+                    try {
+                        const { timestamp } = JSON.parse(cachedData);
+                        const now = new Date().getTime();
+                        
+                        // キャッシュが期限切れで、かつ現在APIリクエスト実行中でなく、オンライン状態の場合
+                        if (now - timestamp >= CACHE_EXPIRY && !isUnsplashFetchInProgress && !isOffline) {
+                            console.log('キャッシュの有効期限が切れました。新しい画像を自動取得します...');
+                            refreshPhotos();
+                        }
+                    } catch (e) {
+                        console.error('キャッシュ確認エラー:', e);
+                    }
+                }
+            }, CACHE_EXPIRY_CHECK);
+        }
         
         // アプリケーション開始
         document.addEventListener('DOMContentLoaded', () => {
@@ -498,6 +522,8 @@
             updateClock();
             setInterval(updateClock, 1000);
             setInterval(changeBackground, 20000); // 20秒ごとに背景を変更
+
+            startCacheExpiryChecker();
             
             // 画面サイズの変更を監視
             window.addEventListener('resize', () => {
