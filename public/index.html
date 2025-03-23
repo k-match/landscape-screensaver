@@ -932,6 +932,7 @@
             const bg_1st_loading = document.createElement('div');
             bg_1st_loading.className = 'background';
             bg_1st_loading.classList.add('loading', 'active');
+            document.body.appendChild(bg_1st_loading);
             
             for (let i = 0; i < photos.length; i++) {
                 const bg = document.createElement('div');
