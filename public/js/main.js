@@ -76,8 +76,6 @@
                 photos = cachedData;
                 initializeBackgrounds();
                 hideLoadingIndicator();
-                // 背景初期化完了後にインターバルを開始
-                startBackgroundChangeInterval();
             } else {
                 // 新しいデータを取得
                 fetchUnsplashPhotos()
@@ -87,16 +85,12 @@
                         cachePhotos(photos);
                         initializeBackgrounds();
                         hideLoadingIndicator();
-                        // 背景初期化完了後にインターバルを開始
-                        startBackgroundChangeInterval();
                     })
                     .catch(error => {
                         console.error('Failed to fetch photos:', error);
                         useFallbackImages();
                         initializeBackgrounds();
                         hideLoadingIndicator();
-                        // エラー時もフォールバック画像の初期化後にインターバルを開始
-                        startBackgroundChangeInterval();
                     });
             }
             
@@ -600,6 +594,8 @@
                         bg.style.backgroundImage = `url(${firstImageUrl})`;
                         // URL情報を保持しておく（2周目以降の保険）
                         bg.dataset.backgroundImage = firstImageUrl;
+                        // 背景初期化完了後にインターバルを開始
+                        startBackgroundChangeInterval();
                         
                         // 次の画像（2枚目）のみプリロード
                         if (photos.length > 1) {
