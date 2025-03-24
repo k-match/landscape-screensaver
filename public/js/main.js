@@ -767,16 +767,29 @@
             }
         }
 
-        // ローディングインジケータ
+        // グローバルでタイマーIDを管理
+        let loadingTimerId;
+
+        // ローディングインジケータ表示関数の修正
         function showLoadingIndicator() {
-            document.getElementById('loading').style.display = 'flex';
+            const loading = document.getElementById('loading');
+            // 以前のタイマーをクリア
+            clearTimeout(loadingTimerId);
+            // スタイルをリセット
+            loading.style.display = 'flex';
+            // 即座にopacityを1に設定して確実に表示
+            loading.style.opacity = '1';
         }
         
+        // ローディングインジケータ非表示関数の修正
         function hideLoadingIndicator() {
             const loading = document.getElementById('loading');
             loading.style.opacity = '0';
-            setTimeout(() => {
-                loading.style.display = 'none';
+            loadingTimerId = setTimeout(() => {
+                // 念のため、まだopacityが0の場合のみdisplayをnoneに
+                if (parseFloat(loading.style.opacity) === 0) {
+                    loading.style.display = 'none';
+                }
             }, 500);
         }
         
