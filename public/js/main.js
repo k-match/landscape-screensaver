@@ -542,15 +542,25 @@
             photoKeywords = Array(colors.length).fill('fallback');
         }
         
-        // 背景要素の初期化（最適化版）
+        // グローバル変数としてローディング用背景要素への参照を保持
+        let bg1stLoadingElement = null;
+
+        // 背景要素の初期化（最適化版 - 重複生成問題修正）
         function initializeBackgrounds() {
             // 既存の背景を全て削除
             clearBackgrounds();
 
-            const bg_1st_loading = document.createElement('div');
-            bg_1st_loading.className = 'background';
-            bg_1st_loading.classList.add('loading', 'active');
-            document.body.appendChild(bg_1st_loading);
+            // bg_1st_loading要素の処理 - 存在しない場合のみ作成
+            if (!bg1stLoadingElement) {
+                bg1stLoadingElement = document.createElement('div');
+                bg1stLoadingElement.className = 'background';
+                bg1stLoadingElement.classList.add('loading');
+                document.body.appendChild(bg1stLoadingElement);
+                console.log('bg_1st_loading要素を作成しました。');
+            }
+            
+            // ローディング状態を有効化
+            bg1stLoadingElement.classList.add('active');
             
             for (let i = 0; i < photos.length; i++) {
                 const bg = document.createElement('div');
@@ -566,16 +576,13 @@
                     // 画像を非同期で読み込む
                     const firstImage = new Image();
                     firstImage.onload = () => {
-                        bg_1st_loading.classList.remove('active');
+                        bg1stLoadingElement.classList.remove('active');
                         bg.classList.add('active');
 
                         // 画像が読み込まれたら背景に設定してフェードイン効果を開始
                         bg.style.backgroundImage = `url(${firstImageUrl})`;
                         // URL情報を保持しておく（2周目以降の保険）
                         bg.dataset.backgroundImage = firstImageUrl;
-                        
-                        // bg.classList.remove('loading');
-                        // bg.classList.add('fade-in');
                         
                         // 次の画像（2枚目）のみプリロード
                         if (photos.length > 1) {
