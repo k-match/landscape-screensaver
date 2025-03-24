@@ -17,6 +17,7 @@
         // const CACHE_EXPIRY = 30 * 1000; // デバッグ30秒（ミリ秒）
         const CACHE_EXPIRY_CHECK = 10 * 60 * 1000; // 10分
         const PHOTOS_COUNT = 30; // 一度に取得する画像の数
+        const INTERVAL = 20000; // 20秒ごとに背景を変更
 
         // Pages Functions API エンドポイント（相対パス）
         const API_ENDPOINT = '/api/unsplash';
@@ -43,6 +44,19 @@
                 }
             }, CACHE_EXPIRY_CHECK);
         }
+
+        // インターバルIDを保持するグローバル変数
+        let backgroundChangeInterval = null;
+
+        // 背景変更インターバルを開始する関数
+        function startBackgroundChangeInterval() {
+            // 既存のインターバルがあればクリアする
+            if (backgroundChangeInterval) {
+                clearInterval(backgroundChangeInterval);
+            }
+            // 新しいインターバルを設定
+            backgroundChangeInterval = setInterval(changeBackground, INTERVAL);
+        }
         
         // アプリケーション開始
         document.addEventListener('DOMContentLoaded', () => {
@@ -62,6 +76,8 @@
                 photos = cachedData;
                 initializeBackgrounds();
                 hideLoadingIndicator();
+                // 背景初期化完了後にインターバルを開始
+                startBackgroundChangeInterval();
             } else {
                 // 新しいデータを取得
                 fetchUnsplashPhotos()
@@ -71,20 +87,22 @@
                         cachePhotos(photos);
                         initializeBackgrounds();
                         hideLoadingIndicator();
+                        // 背景初期化完了後にインターバルを開始
+                        startBackgroundChangeInterval();
                     })
                     .catch(error => {
                         console.error('Failed to fetch photos:', error);
                         useFallbackImages();
                         initializeBackgrounds();
                         hideLoadingIndicator();
+                        // エラー時もフォールバック画像の初期化後にインターバルを開始
+                        startBackgroundChangeInterval();
                     });
             }
             
-            // 時計の更新
+            // 時計の更新（これは背景とは独立して実行）
             updateClock();
             setInterval(updateClock, 1000);
-            setInterval(changeBackground, 20000); // 20秒ごとに背景を変更
-
             startCacheExpiryChecker();
             
             // 画面サイズの変更を監視
@@ -556,7 +574,6 @@
                 bg1stLoadingElement.className = 'background';
                 bg1stLoadingElement.classList.add('loading');
                 document.body.appendChild(bg1stLoadingElement);
-                console.log('bg_1st_loading要素を作成しました。');
             }
             
             // ローディング状態を有効化
