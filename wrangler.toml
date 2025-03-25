@@ -9,6 +9,7 @@ compatibility_date = "2025-03-23"
 
 [vars]
 UNSPLASH_API_KEY = "H1uksBxyGFRLY6wPRISUjSVSCdwXQ1akYYwIoCIa1hk"
+PEXELS_API_KEY = "jCeBbTeVf6shhQtyW7xqY9wgHsTlZ1wSHOpF8DP9L9TIcfQk0fBsmX0r"
 
 [[kv_namespaces]]
 binding = "RATE_LIMITS"

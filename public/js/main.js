@@ -20,7 +20,9 @@
         const INTERVAL = 20000; // 20秒ごとに背景を変更
 
         // Pages Functions API エンドポイント（相対パス）
-        const API_ENDPOINT = '/api/unsplash';
+        // const API_ENDPOINT = '/api/unsplash';
+        
+        const API_ENDPOINT = '/api/pexels'; // '/api/unsplash' から変更
 
         // キャッシュの有効期限を確認し、期限切れなら自動的に画像を再取得する関数
         function startCacheExpiryChecker() {
@@ -736,6 +738,61 @@
         }
 
         // 写真情報を更新
+        // function updatePhotoInfo(index) {
+        //     const photoInfoElement = document.getElementById('photo-info');
+        //     const photo = photos[index];
+            
+        //     // 既存のコンテンツをクリア
+        //     photoInfoElement.textContent = '';
+            
+        //     if (photo && photo.photographer) {
+        //         // 写真クレジット部分
+        //         const creditDiv = document.createElement('div');
+        //         creditDiv.className = 'photo-credit';
+                
+        //         const textNode = document.createTextNode('Photo by ');
+        //         creditDiv.appendChild(textNode);
+                
+        //         const photographerLink = document.createElement('a');
+        //         photographerLink.href = photo.photographer.profile;
+        //         photographerLink.target = '_blank';
+        //         photographerLink.rel = 'noopener';
+        //         photographerLink.textContent = photo.photographer.name;
+        //         creditDiv.appendChild(photographerLink);
+                
+        //         creditDiv.appendChild(document.createTextNode(' on '));
+                
+        //         const unsplashLink = document.createElement('a');
+        //         unsplashLink.href = 'https://unsplash.com';
+        //         unsplashLink.target = '_blank';
+        //         unsplashLink.rel = 'noopener';
+        //         unsplashLink.textContent = 'Unsplash';
+        //         creditDiv.appendChild(unsplashLink);
+                
+        //         photoInfoElement.appendChild(creditDiv);
+                
+        //         // 撮影場所（存在する場合）
+        //         if (photo.location) {
+        //             const locationDiv = document.createElement('div');
+        //             locationDiv.className = 'photo-location';
+        //             locationDiv.textContent = photo.location;
+        //             photoInfoElement.appendChild(locationDiv);
+        //         }
+                
+        //         // 写真の説明（存在する場合）
+        //         if (photo.description) {
+        //             const descriptionDiv = document.createElement('div');
+        //             descriptionDiv.className = 'photo-description';
+        //             descriptionDiv.textContent = photo.description;
+        //             photoInfoElement.appendChild(descriptionDiv);
+        //         }
+        //     }
+        // }
+
+        // public/js/main.js の updatePhotoInfo 関数の更新版
+
+// public/js/main.js の updatePhotoInfo 関数を修正
+
         function updatePhotoInfo(index) {
             const photoInfoElement = document.getElementById('photo-info');
             const photo = photos[index];
@@ -744,44 +801,45 @@
             photoInfoElement.textContent = '';
             
             if (photo && photo.photographer) {
-                // 写真クレジット部分
+                // 写真クレジット部分 - 単一リンクとして実装
                 const creditDiv = document.createElement('div');
                 creditDiv.className = 'photo-credit';
                 
-                const textNode = document.createTextNode('Photo by ');
-                creditDiv.appendChild(textNode);
+                // 単一のリンク要素を作成
+                const creditLink = document.createElement('a');
+                creditLink.href = photo.download_url; // 写真ページへのURL
+                creditLink.target = '_blank';
+                creditLink.rel = 'noopener';
+                // テキスト全体を設定
+                creditLink.textContent = `Photo by ${photo.photographer.name} on Pexels`;
                 
-                const photographerLink = document.createElement('a');
-                photographerLink.href = photo.photographer.profile;
-                photographerLink.target = '_blank';
-                photographerLink.rel = 'noopener';
-                photographerLink.textContent = photo.photographer.name;
-                creditDiv.appendChild(photographerLink);
-                
-                creditDiv.appendChild(document.createTextNode(' on '));
-                
-                const unsplashLink = document.createElement('a');
-                unsplashLink.href = 'https://unsplash.com';
-                unsplashLink.target = '_blank';
-                unsplashLink.rel = 'noopener';
-                unsplashLink.textContent = 'Unsplash';
-                creditDiv.appendChild(unsplashLink);
-                
+                // リンクをクレジットdivに追加
+                creditDiv.appendChild(creditLink);
                 photoInfoElement.appendChild(creditDiv);
                 
-                // 撮影場所（存在する場合）
-                if (photo.location) {
-                    const locationDiv = document.createElement('div');
-                    locationDiv.className = 'photo-location';
-                    locationDiv.textContent = photo.location;
-                    photoInfoElement.appendChild(locationDiv);
-                }
-                
-                // 写真の説明（存在する場合）
+                // 写真の説明（存在する場合）- クリックで写真ページに移動するようにする
                 if (photo.description) {
                     const descriptionDiv = document.createElement('div');
                     descriptionDiv.className = 'photo-description';
-                    descriptionDiv.textContent = photo.description;
+                    
+                    // 説明自体をリンクにする
+                    const descriptionLink = document.createElement('a');
+                    descriptionLink.href = photo.download_url;
+                    descriptionLink.target = '_blank';
+                    descriptionLink.rel = 'noopener';
+                    descriptionLink.textContent = photo.description;
+                    descriptionLink.style.color = 'inherit'; // リンクの色を継承
+                    descriptionLink.style.textDecoration = 'none'; // 下線を消す
+                    
+                    // ホバー時に下線を表示するスタイルを追加
+                    descriptionLink.onmouseover = function() {
+                        this.style.textDecoration = 'underline';
+                    };
+                    descriptionLink.onmouseout = function() {
+                        this.style.textDecoration = 'none';
+                    };
+                    
+                    descriptionDiv.appendChild(descriptionLink);
                     photoInfoElement.appendChild(descriptionDiv);
                 }
             }
@@ -879,8 +937,16 @@
         
         // クリックでフルスクリーン表示
         document.addEventListener('click', (e) => {
-            // キーワードセレクターや現在のキーワード表示領域以外のクリックでフルスクリーン
-            if (!e.target.closest('#current-keyword') && !e.target.closest('#keyword-selector')) {
+            // 以下の要素をクリックした場合は全画面表示しない
+            // 1. キーワードセレクター
+            // 2. 現在のキーワード表示領域
+            // 3. 写真情報（クレジット）領域 - 追加
+            // 4. リンク要素 (a タグ) - 追加
+            if (!e.target.closest('#current-keyword') && 
+                !e.target.closest('#keyword-selector') && 
+                !e.target.closest('#photo-info') && 
+                !e.target.closest('a')) {
+                
                 if (document.documentElement.requestFullscreen) {
                     document.documentElement.requestFullscreen();
                     keepAwake();

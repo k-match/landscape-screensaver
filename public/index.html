@@ -13,8 +13,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-title" content="Landscape Clock">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://images.unsplash.com; connect-src 'self' https://api.unsplash.com; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none';">
-    
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://images.unsplash.com; connect-src 'self' https://api.unsplash.com; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none';"> -->
+    <!-- public/index.html のContent-Security-Policy変更 (14行目付近) -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://images.pexels.com; connect-src 'self' https://api.pexels.com; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none';">
+
+
     <!-- アイコン -->
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
     <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png">
